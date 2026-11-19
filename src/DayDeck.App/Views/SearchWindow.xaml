@@ -1,0 +1,69 @@
+<Window x:Class="DayDeck.App.Views.SearchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="전체 검색" Width="600" Height="460"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
+        FontFamily="{DynamicResource UiFont}" Background="{DynamicResource SurfaceBrush}"
+        BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <DockPanel>
+        <Grid DockPanel.Dock="Top" Margin="16,12,16,10">
+            <TextBlock Text="⌕" FontSize="18" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+            <TextBox x:Name="QueryBox" Margin="26,0,0,0" FontSize="16" BorderThickness="0" Background="Transparent"
+                     Foreground="{DynamicResource TextBrush}" CaretBrush="{DynamicResource TextBrush}"
+                     TextChanged="OnQueryChanged" PreviewKeyDown="OnQueryKeyDown" AutomationProperties.Name="검색어" />
+            <TextBlock x:Name="Placeholder" Margin="28,0,0,0" FontSize="16" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"
+                       VerticalAlignment="Center" Text="할 일, 일정, 메모 검색" />
+        </Grid>
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="16,6">
+            <TextBlock x:Name="FooterText" FontSize="11" Foreground="{DynamicResource MutedBrush}"
+                       Text="↑↓ 이동 · Enter 열기 · Esc 닫기" />
+        </Border>
+        <Grid>
+            <ListBox x:Name="Results" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource LineBrush}" Background="Transparent"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="OnResultActivated" KeyDown="OnResultsKeyDown">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                <Setter Property="Focusable" Value="False" />
+                                <Setter Property="IsHitTestVisible" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="10,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="26" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Icon}" FontSize="13" VerticalAlignment="Top" Margin="0,1,0,0" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock x:Name="TitleText" Text="{Binding Title}" FontSize="13.5" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="DetailText" Text="{Binding Detail}" FontSize="11.5" Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                <Setter TargetName="TitleText" Property="FontSize" Value="11.5" />
+                                <Setter TargetName="TitleText" Property="FontWeight" Value="SemiBold" />
+                                <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                                <Setter TargetName="DetailText" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                <Setter TargetName="TitleText" Property="TextDecorations" Value="Strikethrough" />
+                                <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock x:Name="EmptyText" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12.5"
+                       Foreground="{DynamicResource MutedBrush}" />
+        </Grid>
+    </DockPanel>
+</Window>

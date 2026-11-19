@@ -1,0 +1,22 @@
+<Window x:Class="DayDeck.App.Views.StickyNoteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="스티커 메모" Width="260" Height="240" MinWidth="160" MinHeight="120"
+        WindowStyle="None" ResizeMode="CanResizeWithGrip" ShowInTaskbar="False" AllowsTransparency="False"
+        FontFamily="{DynamicResource UiFont}" BorderThickness="1"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <DockPanel>
+        <DockPanel x:Name="Header" DockPanel.Dock="Top" Height="26" MouseLeftButtonDown="OnHeaderDown" Background="Transparent">
+            <Button x:Name="CloseButton" DockPanel.Dock="Right" Content="✕" Width="26" Background="Transparent" BorderThickness="0" Click="OnClose"
+                    ToolTip="스티커 닫기 (메모는 남음)" AutomationProperties.Name="스티커 닫기" />
+            <Button x:Name="ColorButton" DockPanel.Dock="Right" Content="🎨" Width="26" Background="Transparent" BorderThickness="0" Click="OnColor"
+                    ToolTip="색 바꾸기" AutomationProperties.Name="색 바꾸기" />
+            <Button DockPanel.Dock="Right" Content="📌" Width="26" Background="Transparent" BorderThickness="0" Click="OnPin"
+                    x:Name="PinButton" ToolTip="항상 위" AutomationProperties.Name="항상 위" />
+            <TextBlock x:Name="TitleText" Margin="10,0,0,0" FontSize="11" VerticalAlignment="Center" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+        </DockPanel>
+        <TextBox x:Name="Editor" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent"
+                 Padding="10,2,10,10" FontSize="13.5" VerticalScrollBarVisibility="Auto" TextChanged="OnTextChanged"
+                 AutomationProperties.Name="스티커 내용" />
+    </DockPanel>
+</Window>

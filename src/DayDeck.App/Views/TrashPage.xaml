@@ -1,0 +1,43 @@
+<UserControl x:Class="DayDeck.App.Views.TrashPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right" Content="휴지통 비우기" Padding="12,4" Click="OnEmpty" VerticalAlignment="Bottom" />
+            <StackPanel>
+                <TextBlock Text="휴지통" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                <TextBlock x:Name="SubtitleText" FontSize="13" Margin="0,2,0,0" Foreground="{DynamicResource SubTextBrush}"
+                           Text="지운 할 일·일정·메모는 30일 동안 보관한 뒤 영구 삭제합니다." />
+            </StackPanel>
+        </DockPanel>
+        <Grid>
+            <ListBox x:Name="Items" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1,0,1,1" Padding="14,8">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="↩ 복원" Padding="10,2" Margin="0,0,6,0" Click="OnRestore" Tag="{Binding}" />
+                                    <Button Content="영구 삭제" Padding="10,2" Click="OnDeleteForever" Tag="{Binding}" Foreground="{DynamicResource DangerBrush}" />
+                                </StackPanel>
+                                <TextBlock DockPanel.Dock="Left" Text="{Binding Icon}" FontSize="14" Width="26" VerticalAlignment="Center" />
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontSize="13.5" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detail}" FontSize="11.5" Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock x:Name="EmptyText" Text="휴지통이 비어 있습니다." HorizontalAlignment="Center" VerticalAlignment="Center"
+                       FontSize="13" Foreground="{DynamicResource MutedBrush}" Visibility="Collapsed" />
+        </Grid>
+    </DockPanel>
+</UserControl>

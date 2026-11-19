@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DayDeck 개인정보처리방침</title>
+<meta name="description" content="DayDeck(할 일·일정·메모·알림 관리 앱)의 개인정보처리방침">
+<style>
+  :root {
+    --bg: #ffffff; --text: #1f2328; --sub: #59636e; --line: #d1d9e0; --accent: #7c5cdb; --card: #f6f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1117; --text: #e6edf3; --sub: #9198a1; --line: #3d444d; --accent: #a78bfa; --card: #151b23; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.7 "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    word-break: keep-all; overflow-wrap: anywhere;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  h2 { font-size: 1.2rem; margin: 36px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .meta { color: var(--sub); margin: 0 0 24px; }
+  .summary { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 14px 18px; }
+  .summary ul { margin: 6px 0 0; padding-left: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--sub); font-weight: 600; white-space: nowrap; }
+  code { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font-size: .9em; }
+  a { color: var(--accent); }
+  .en { color: var(--sub); font-size: .95rem; }
+  footer { margin-top: 48px; color: var(--sub); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>DayDeck 개인정보처리방침</h1>
+  <p class="meta">시행일: 2026년 11월 18일 · 게시자: 에이든초이</p>
+
+  <div class="summary">
+    <strong>요약</strong>
+    <ul>
+      <li>DayDeck은 개인정보를 <strong>수집하지 않으며</strong>, 개발자나 다른 사람에게 <strong>보내지 않습니다</strong>.</li>
+      <li>할 일·일정·메모·설정은 모두 <strong>사용자 PC에만</strong> 저장됩니다.</li>
+      <li>회원 가입, 광고, 사용 통계, 오류 보고 전송이 없습니다.</li>
+    </ul>
+  </div>
+
+  <h2>1. 처리하는 정보와 저장 위치</h2>
+  <p>DayDeck은 사용자가 직접 입력한 내용을 사용자의 PC에만 저장합니다. 개발자는 이 내용을 볼 수 없습니다.</p>
+  <table>
+    <tr><th>정보</th><td>할 일, 달력 일정, 메모(붙여 넣은 그림 포함), 알림, 워크플로우 그림, 앱 설정</td></tr>
+    <tr><th>오류 기록</th><td>문제 해결을 위한 로그 파일(<code>Logs</code>)이 PC에 남습니다. 자동으로 전송되지 않습니다.</td></tr>
+    <tr><th>백업</th><td>하루 한 번 자동 백업(zip)을 PC의 <code>Backups</code> 폴더(또는 사용자가 고른 폴더)에 만듭니다.</td></tr>
+    <tr><th>저장 위치</th><td>
+      Microsoft Store 판: <code>%LOCALAPPDATA%\Packages\490D7318.DayDeck_…\LocalState</code><br>
+      설치 프로그램·zip 판: 설치(실행) 폴더 안의 <code>Data</code> 폴더 (쓸 수 없는 곳이면 <code>%APPDATA%\DayDeck</code>)
+    </td></tr>
+  </table>
+  <p>PC 백업이나 OneDrive처럼 사용자가 따로 쓰는 동기화·백업 도구가 이 폴더를 복사할 수 있으며, 그때는 해당 서비스의 정책을 따릅니다.</p>
+
+  <h2>2. 인터넷 연결</h2>
+  <ul>
+    <li><strong>Microsoft Store 판</strong>: 앱이 스스로 인터넷에 연결하지 않습니다. 업데이트는 Microsoft Store가 처리합니다.</li>
+    <li><strong>설치 프로그램·zip 판</strong>: 새 버전을 확인하려고 하루 한 번 GitHub(<code>api.github.com</code>)에 접속합니다.
+      이때 개인정보는 보내지 않으며, 일반적인 인터넷 요청처럼 GitHub가 IP 주소와 앱 버전(User-Agent)을 받을 수 있습니다
+      (<a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub 개인정보 처리방침</a>).
+      설정 → 업데이트에서 끌 수 있습니다.</li>
+    <li>메모 속 링크를 누르면 기본 웹 브라우저로 열립니다. 이후는 해당 웹사이트의 정책을 따릅니다.</li>
+  </ul>
+
+  <h2>3. 제3자 제공 및 위탁</h2>
+  <p>DayDeck은 개인정보를 수집하지 않으므로 제3자에게 제공하거나 처리를 위탁하지 않습니다. 광고·분석 도구(SDK)를 쓰지 않습니다.</p>
+
+  <h2>4. 사용 권한</h2>
+  <ul>
+    <li><strong>전체 신뢰(runFullTrust)</strong>: 데스크톱 앱으로서 트레이 상주, 전역 단축키, PC의 파일 저장(메모·백업·내보내기)에 필요합니다.</li>
+    <li><strong>시작 프로그램</strong>: Windows에 로그인할 때 자동 실행합니다. 앱 설정이나 작업 관리자 → 시작 앱에서 끌 수 있습니다.</li>
+    <li>파일 가져오기·내보내기(ICS, CSV)와 그림 붙여 넣기는 사용자가 직접 고른 파일과 클립보드 내용만 사용합니다.</li>
+  </ul>
+
+  <h2>5. 보관 기간과 삭제</h2>
+  <p>데이터는 사용자가 지울 때까지 PC에 남습니다. 앱 안에서 항목을 지우거나, 데이터 폴더(설정 → 데이터 → 열기)를 지우면 됩니다.
+    Microsoft Store 판은 앱을 제거하면 데이터도 함께 지워집니다. 설치 프로그램 판은 제거할 때 데이터를 지울지 묻습니다.</p>
+
+  <h2>6. 아동의 개인정보</h2>
+  <p>DayDeck은 누구의 개인정보도 수집하지 않으며, 만 14세 미만 아동의 정보도 수집하지 않습니다.</p>
+
+  <h2>7. 방침의 변경</h2>
+  <p>이 방침이 바뀌면 이 페이지에 새 내용과 시행일을 게시합니다. 개인정보를 수집하게 되는 변경이라면 앱에서도 미리 알립니다.</p>
+
+  <h2>8. 문의</h2>
+  <p>개인정보와 관련한 문의: <a href="mailto:opaqe@naver.com">opaqe@naver.com</a> (게시자: 에이든초이)</p>
+
+  <h2 lang="en">Summary in English</h2>
+  <div class="en" lang="en">
+    <p>DayDeck does not collect, store on any server, or share personal information. Your tasks, calendar events, notes and settings
+      stay on your PC only. There are no accounts, ads, analytics or crash reporting. The Microsoft Store version makes no network
+      connections of its own. The installer/zip version checks GitHub (api.github.com) once a day for updates, which can be turned off in
+      Settings; no personal data is sent. Uninstalling the Store version removes its data. Contact: opaqe@naver.com.</p>
+  </div>
+
+  <footer>© 2026 에이든초이 · DayDeck</footer>
+</main>
+</body>
+</html>

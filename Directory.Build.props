@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Version>0.9.0</Version>
+    <Company>에이든초이</Company>
+    <Product>DayDeck</Product>
+    <!-- Linux/macOS에서도 Windows 대상 프로젝트를 빌드할 수 있게 한다 (CI 및 개발 편의) -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>

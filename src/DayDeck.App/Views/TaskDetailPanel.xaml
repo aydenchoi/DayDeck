@@ -1,0 +1,186 @@
+<UserControl x:Class="DayDeck.App.Views.TaskDetailPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DayDeck.App.ViewModels"
+             xmlns:local="clr-namespace:DayDeck.App.Views">
+    <UserControl.Resources>
+        <Style x:Key="FieldLabel" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}" />
+            <Setter Property="Margin" Value="0,14,0,4" />
+        </Style>
+        <Style x:Key="ChipButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Background" Value="{DynamicResource InputBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
+
+    <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="8">
+        <DockPanel Margin="18,14,18,14">
+            <!-- 상단: 완료 체크, 닫기 -->
+            <DockPanel DockPanel.Dock="Top">
+                <Button DockPanel.Dock="Right" Content="✕" Width="28" Height="28" Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource SubTextBrush}" Click="OnCloseClick" ToolTip="닫기 (Esc)" Cursor="Hand" />
+                <CheckBox IsChecked="{Binding IsCompleted}" VerticalAlignment="Center" FontSize="12"
+                          Foreground="{DynamicResource SubTextBrush}" Content="완료" />
+            </DockPanel>
+
+            <!-- 하단: 만든 날짜, 삭제 -->
+            <DockPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                <Button DockPanel.Dock="Right" Content="{Binding CancelLabel}" Padding="10,3" Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource SubTextBrush}" Click="OnCancelClick" ToolTip="하지 않기로 한 할 일 (완료 영역에 ⊘로 남음)" />
+                <Button DockPanel.Dock="Right" Content="🗑 삭제" Padding="10,3" Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource DangerBrush}" Click="OnDeleteClick" Cursor="Hand" />
+                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+
+            <TextBox x:Name="TitleBox" DockPanel.Dock="Top" Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontSize="18" FontWeight="SemiBold"
+                     TextWrapping="Wrap" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource LineBrush}" Padding="0,6"
+                     Margin="0,6,0,0" AcceptsReturn="False" />
+
+            <!-- 할 일 정보 (마감·우선순위·알림·하위 할 일 등). 접으면 한 줄 요약만 보이고 메모가 넓어진다. -->
+            <Button x:Name="InfoToggle" DockPanel.Dock="Top" Margin="0,8,0,0" Padding="0,3" Background="Transparent" BorderThickness="0"
+                    HorizontalContentAlignment="Left" Cursor="Hand" Click="OnInfoToggle" AutomationProperties.Name="할 일 정보 펼치기/접기">
+                <TextBlock x:Name="InfoHeader" FontSize="12.5" Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis" />
+            </Button>
+            <ScrollViewer x:Name="InfoScroll" DockPanel.Dock="Top" MaxHeight="300" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,0,6,0">
+                    <ToggleButton IsChecked="{Binding IsMyDay}" HorizontalAlignment="Left" Margin="0,12,0,0" Padding="10,4"
+                                  Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource LineBrush}" Cursor="Hand">
+                        <TextBlock Text="☀ 오늘 할 일" FontSize="12" />
+                    </ToggleButton>
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="마감" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="110" />
+                        </Grid.ColumnDefinitions>
+                        <DatePicker SelectedDate="{Binding DueDate}" SelectedDateFormat="Long" />
+                        <ComboBox Grid.Column="1" Margin="6,0,0,0" ItemsSource="{Binding TimeOptions}" SelectedItem="{Binding DueTime}"
+                                  IsEnabled="{Binding HasDueDate}" MaxDropDownHeight="260" />
+                    </Grid>
+                    <WrapPanel Margin="0,6,0,0">
+                        <Button Style="{StaticResource ChipButton}" Content="오늘" Click="OnDueToday" />
+                        <Button Style="{StaticResource ChipButton}" Content="내일" Click="OnDueTomorrow" />
+                        <Button Style="{StaticResource ChipButton}" Content="다음 주 월요일" Click="OnDueNextWeek" />
+                        <Button Style="{StaticResource ChipButton}" Content="지우기" Click="OnDueClear" />
+                    </WrapPanel>
+
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="우선순위" />
+                            <ComboBox SelectedIndex="{Binding PriorityIndex}">
+                                <ComboBoxItem Content="없음" />
+                                <ComboBoxItem Content="! 낮음" />
+                                <ComboBoxItem Content="!! 보통" />
+                                <ComboBoxItem Content="!!! 높음" />
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="목록" />
+                            <ComboBox ItemsSource="{Binding Lists}" SelectedItem="{Binding SelectedList}" DisplayMemberPath="Name" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="반복" />
+                    <ComboBox ItemsSource="{Binding RepeatOptions}" SelectedItem="{Binding SelectedRepeat}" DisplayMemberPath="Label"
+                              AutomationProperties.Name="반복" />
+                    <TextBlock Text="{Binding RepeatHint}" FontSize="11" Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,4,0,0" />
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="태그" />
+                    <TextBox Text="{Binding TagsText, UpdateSourceTrigger=LostFocus}" Padding="4,3" AutomationProperties.Name="태그"
+                             ToolTip="쉼표나 띄어쓰기로 구분 (예: 전화, 급함). 빠른 추가에서는 @태그" KeyDown="OnTagsKeyDown" />
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="알림" />
+                    <ItemsControl ItemsSource="{Binding Reminders}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:ReminderItemViewModel}">
+                                <DockPanel Margin="0,1">
+                                    <Button DockPanel.Dock="Right" Content="✕" Background="Transparent" BorderThickness="0" Padding="6,0"
+                                            Foreground="{DynamicResource MutedBrush}" Click="OnRemoveReminder" Tag="{Binding}" Cursor="Hand"
+                                            AutomationProperties.Name="알림 삭제" />
+                                    <TextBlock x:Name="StatusText" DockPanel.Dock="Right" Text="{Binding Status}" FontSize="11"
+                                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="8,0,4,0" />
+                                    <TextBlock x:Name="ReminderText" Text="{Binding Text}" FontSize="12.5" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                        <Setter TargetName="StatusText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                                        <Setter TargetName="ReminderText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,4,0,2" Text="마감 기준" />
+                    <WrapPanel IsEnabled="{Binding HasDueDate}">
+                        <Button Style="{StaticResource ChipButton}" Content="정시" Tag="0" Click="OnAddRelativeReminder" Margin="0,0,4,4" />
+                        <Button Style="{StaticResource ChipButton}" Content="10분 전" Tag="-10" Click="OnAddRelativeReminder" Margin="0,0,4,4" />
+                        <Button Style="{StaticResource ChipButton}" Content="30분 전" Tag="-30" Click="OnAddRelativeReminder" Margin="0,0,4,4" />
+                        <Button Style="{StaticResource ChipButton}" Content="1시간 전" Tag="-60" Click="OnAddRelativeReminder" Margin="0,0,4,4" />
+                        <Button Style="{StaticResource ChipButton}" Content="1일 전" Tag="-1440" Click="OnAddRelativeReminder" Margin="0,0,4,4" />
+                    </WrapPanel>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,2,0,2" Text="시각 지정" />
+                    <WrapPanel>
+                        <Button Style="{StaticResource ChipButton}" Content="1시간 뒤" Click="OnRemindInHour" Margin="0,0,4,4" />
+                        <Button Style="{StaticResource ChipButton}" Content="오늘 저녁 6시" Click="OnRemindThisEvening" Margin="0,0,4,4" />
+                        <Button Style="{StaticResource ChipButton}" Content="내일 아침" Click="OnRemindTomorrowMorning" Margin="0,0,4,4" />
+                    </WrapPanel>
+                    <CheckBox IsChecked="{Binding IsPersistent}" IsEnabled="{Binding HasReminders}" Margin="0,4,0,0" FontSize="12"
+                              Content="확인할 때까지 반복해서 알림 (끈질긴 알림)" />
+
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="하위 할 일" />
+                    <ItemsControl ItemsSource="{Binding Subtasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:SubtaskViewModel}">
+                                <DockPanel Margin="0,2">
+                                    <Button DockPanel.Dock="Right" Content="✕" Background="Transparent" BorderThickness="0" Padding="6,0"
+                                            Foreground="{DynamicResource MutedBrush}" Click="OnSubtaskDelete" Tag="{Binding}" Cursor="Hand" />
+                                    <CheckBox IsChecked="{Binding IsDone, Mode=OneWay}" Click="OnSubtaskToggle" Tag="{Binding}" VerticalAlignment="Center">
+                                        <TextBlock x:Name="SubTitle" Text="{Binding Title}" TextWrapping="Wrap" />
+                                    </CheckBox>
+                                </DockPanel>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                        <Setter TargetName="SubTitle" Property="TextDecorations" Value="Strikethrough" />
+                                        <Setter TargetName="SubTitle" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid Margin="0,4,0,0">
+                        <TextBox x:Name="SubtaskInput" KeyDown="OnSubtaskKeyDown" Padding="2,3" />
+                        <TextBlock x:Name="SubtaskPlaceholder" Text="＋ 하위 할 일 추가 (Enter)" Margin="5,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="12" IsHitTestVisible="False" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 메모: 메모 화면처럼 서식이 적용된 모양 그대로 고친다 (보기 편집기). "원문"을 누르면 마크다운 입력란. -->
+            <DockPanel Margin="0,10,0,0">
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource FieldLabel}" Text="메모" Margin="0,0,0,4" />
+                <local:MarkdownToolbar x:Name="NotesToolbar" DockPanel.Dock="Top" Margin="0,0,0,3" />
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4" MinHeight="160">
+                    <Grid x:Name="NotesHost">
+                        <TextBox x:Name="NotesBox" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" AcceptsTab="True"
+                                 TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="4" BorderThickness="0" Visibility="Collapsed"
+                                 AutomationProperties.Name="할 일 메모" />
+                    </Grid>
+                </Border>
+            </DockPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

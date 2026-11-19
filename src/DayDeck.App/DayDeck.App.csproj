@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>DayDeck.App</RootNamespace>
+    <AssemblyName>DayDeck</AssemblyName>
+    <StartupObject>DayDeck.App.Program</StartupObject>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- 상주 메모리 최소화: 워크스테이션 GC, 백그라운드 GC 스레드 없음 -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <SatelliteResourceLanguages>ko;en</SatelliteResourceLanguages>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- Microsoft Store(MSIX) 판: dotnet publish ... -p:StoreBuild=true
+       StartupTask 같은 Windows API(WinRT)를 쓰려면 Windows SDK 버전이 붙은 대상 프레임워크가 필요하다.
+       일반 판(zip)은 그대로 net10.0-windows로 두어 exe 크기를 늘리지 않는다. -->
+  <PropertyGroup Condition="'$(StoreBuild)' == 'true'">
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <DefineConstants>$(DefineConstants);STORE_BUILD</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Program.Main에서 단일 인스턴스를 먼저 확인하려고 자동 생성 Main을 끈다 -->
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\app-alert.ico" />
+    <Resource Include="Assets\Fonts\*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DayDeck.Core\DayDeck.Core.csproj" />
+  </ItemGroup>
+
+</Project>

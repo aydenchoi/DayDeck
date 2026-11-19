@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>DayDeck Mockups</title>
+<style>
+:root{
+  --bg:#f3f3f3; --surface:#fbfbfb; --card:#ffffff; --line:#e5e5e5; --line2:#ededed;
+  --text:#1b1b1b; --sub:#5f5f5f; --muted:#9a9a9a;
+  --accent:#0067c0; --accent-soft:#e6f0fa;
+  --red:#c42b1c; --red-soft:#fde7e9; --green:#0f7b0f; --orange:#c75b00;
+  --blue:#2b6cd4; --purple:#7a3fbf; --teal:#00807a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#d9dde3;font-family:"WenQuanYi Zen Hei","Segoe UI",sans-serif;color:var(--text);font-size:13px;padding:30px;display:flex;flex-direction:column;gap:40px;align-items:flex-start}
+.shot{padding:24px;background:linear-gradient(135deg,#c9d6e8,#e4dccf)}
+.win{width:1180px;height:740px;background:var(--bg);border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.25),0 0 0 1px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.titlebar{height:44px;display:flex;align-items:center;padding:0 0 0 14px;gap:12px;background:var(--bg)}
+.logo{width:18px;height:18px;border-radius:4px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.appname{font-size:12px;color:var(--sub)}
+.search{margin-left:120px;width:420px;height:30px;border-radius:6px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;padding:0 10px;color:var(--muted);font-size:12px;gap:8px}
+.search kbd{margin-left:auto;font-family:inherit;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--sub)}
+.tb-right{margin-left:auto;display:flex;height:100%}
+.tb-right span{width:46px;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:14px}
+.body{flex:1;display:flex;min-height:0}
+.nav{width:210px;padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.nav .it{height:34px;border-radius:5px;display:flex;align-items:center;gap:10px;padding:0 10px;color:var(--text);position:relative}
+.nav .it .ic{width:18px;text-align:center;color:var(--sub)}
+.nav .it .n{margin-left:auto;font-size:11px;color:var(--sub)}
+.nav .it .n.red{color:#fff;background:var(--red);border-radius:9px;padding:0 6px;line-height:16px}
+.nav .it.on{background:#e9e9e9}
+.nav .it.on:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:2px;background:var(--accent)}
+.nav .sep{height:1px;background:var(--line);margin:8px 6px}
+.nav .grp{font-size:11px;color:var(--muted);padding:4px 10px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.main{flex:1;background:var(--surface);border-top-left-radius:8px;border:1px solid var(--line);border-right:0;border-bottom:0;padding:22px 28px;display:flex;flex-direction:column;min-width:0}
+.status{height:28px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 14px;font-size:11px;color:var(--sub);gap:16px;background:var(--bg)}
+.status .ok{color:var(--green)}
+h1{font-size:24px;font-weight:600}
+.subh{color:var(--sub);font-size:13px;margin-top:2px}
+.prog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--sub)}
+.bar{width:160px;height:6px;border-radius:3px;background:#e3e3e3;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green)}
+.card{background:var(--card);border:1px solid var(--line2);border-radius:7px}
+.sec{font-size:12px;font-weight:600;color:var(--sub);margin:16px 0 6px;display:flex;align-items:center;gap:6px}
+.row{display:flex;align-items:center;gap:12px;padding:0 14px;height:48px;border-bottom:1px solid var(--line2)}
+.row:last-child{border-bottom:0}
+.chk{width:18px;height:18px;border-radius:50%;border:1.6px solid #8a8a8a;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
+.chk.p3{border-color:var(--red)} .chk.p2{border-color:var(--orange)} .chk.p1{border-color:var(--blue)}
+.chk.done{background:var(--green);border-color:var(--green)}
+.chk.cancel{border-style:dashed;color:var(--muted)}
+.ttl{font-size:14px}
+.meta{font-size:11px;color:var(--sub);display:flex;gap:10px;margin-top:2px;align-items:center}
+.over .ttl{font-weight:700}
+.over .meta .due{color:var(--red);font-weight:600}
+.over{background:linear-gradient(90deg,var(--red-soft),#fff 40%)}
+.warn{color:var(--red);font-weight:700}
+.done .ttl{text-decoration:line-through;color:var(--muted)}
+.done .meta{color:var(--muted)}
+.right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tag{font-size:11px;padding:1px 8px;border-radius:10px;background:#f0f0f0;color:var(--sub)}
+.pri{font-size:11px;font-weight:700}
+.bell{font-size:11px;color:var(--accent)}
+.allday{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.pill{border-radius:4px;padding:3px 10px;font-size:12px;color:#fff}
+.add{margin-top:14px;height:42px;border-radius:6px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;padding:0 14px;gap:10px;color:var(--muted);font-size:13px}
+.add b{color:var(--accent);font-size:18px;font-weight:400}
+.legend{display:flex;gap:18px;font-size:11px;color:var(--sub);margin-top:auto;padding-top:12px}
+.legend span{display:flex;align-items:center;gap:6px}
+/* calendar */
+.calhead{display:flex;align-items:center;gap:12px}
+.btn{height:30px;border-radius:5px;border:1px solid var(--line);background:#fff;padding:0 12px;display:flex;align-items:center;font-size:12px}
+.seg{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-left:auto;background:#fff}
+.seg span{padding:6px 14px;font-size:12px;border-right:1px solid var(--line)}
+.seg span:last-child{border-right:0}
+.seg .on{background:var(--accent);color:#fff}
+.week{margin-top:14px;flex:1;display:grid;grid-template-columns:56px repeat(7,1fr);grid-template-rows:44px 54px 1fr;border:1px solid var(--line2);border-radius:7px;background:#fff;overflow:hidden;min-height:0}
+.wd{border-left:1px solid var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--sub)}
+.wd b{font-size:17px;font-weight:600;color:var(--text)}
+.wd.today b{background:var(--accent);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.wd.sun,.wd.sun b{color:var(--red)}
+.wd.sat,.wd.sat b{color:var(--blue)}
+.adl{font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:center;border-top:1px solid var(--line2)}
+.adr{grid-column:2/9;border-top:1px solid var(--line2);position:relative}
+.adr .ev{position:absolute;height:20px;border-radius:4px;font-size:11px;color:#fff;padding:2px 8px;white-space:nowrap;overflow:hidden}
+.times{border-top:1px solid var(--line2);position:relative}
+.times div{position:absolute;right:6px;font-size:10px;color:var(--muted);transform:translateY(-6px)}
+.grid{grid-column:2/9;border-top:1px solid var(--line2);position:relative;
+  background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);
+  background-size:100% 52px,calc(100%/7) 100%}
+.blk{position:absolute;border-radius:5px;padding:4px 7px;font-size:11px;line-height:1.35;overflow:hidden;border-left:3px solid}
+.blk b{display:block;font-size:12px}
+.blk.done{background:#f4f4f4!important;color:var(--muted)!important;border-left-color:#bdbdbd!important;text-decoration:line-through}
+.blk.miss{background:repeating-linear-gradient(135deg,#fff3e6,#fff3e6 5px,#ffe2c2 5px,#ffe2c2 10px)!important}
+.now{position:absolute;left:0;right:0;height:2px;background:var(--red)}
+.now:before{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--red)}
+/* month */
+.month{margin-top:14px;flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:30px repeat(5,1fr);border:1px solid var(--line2);border-radius:7px;background:#fff;overflow:hidden}
+.mh{font-size:11px;color:var(--sub);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line2)}
+.mc{border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:4px 5px;display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden}
+.mc:nth-child(7n){border-right:0}
+.mc .d{font-size:12px;font-weight:600;margin-bottom:2px;display:flex;gap:6px;align-items:center}
+.mc .d small{font-size:10px;font-weight:400;color:var(--red)}
+.mc.out .d{color:#c8c8c8}
+.mc.sun .d{color:var(--red)} .mc.sat .d{color:var(--blue)}
+.mc.out .d,.mc.out.sun .d,.mc.out.sat .d{color:#c8c8c8}
+.mc.today{background:var(--accent-soft)}
+.mc.today .d span{background:var(--accent);color:#fff;border-radius:10px;padding:0 6px}
+.me{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
+.me.bar2{color:#fff;border-radius:3px;padding:1px 6px}
+.me.fin{color:var(--muted);text-decoration:line-through}
+.me.od{color:var(--red);font-weight:700}
+.more{font-size:10px;color:var(--sub)}
+/* notes */
+.notes{flex:1;display:flex;min-height:0}
+.ftree{width:200px;padding:16px 10px;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:2px}
+.ftree .f{height:30px;display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:5px;font-size:13px}
+.ftree .f.on{background:#e9e9e9}
+.ftree .f .n{margin-left:auto;font-size:11px;color:var(--muted)}
+.nlist{width:270px;border-right:1px solid var(--line);background:#fff;display:flex;flex-direction:column}
+.nl-h{padding:14px;border-bottom:1px solid var(--line2);display:flex;align-items:center;justify-content:space-between}
+.nl-h b{font-size:15px}
+.ni{padding:12px 14px;border-bottom:1px solid var(--line2)}
+.ni.on{background:var(--accent-soft);border-left:3px solid var(--accent);padding-left:11px}
+.ni .t{font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+.ni .p{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5}
+.editor{flex:1;background:#fff;display:flex;flex-direction:column;min-width:0}
+.tabs{height:38px;display:flex;align-items:flex-end;gap:2px;padding:0 8px;background:var(--bg);border-bottom:1px solid var(--line)}
+.tab{height:32px;padding:0 12px;display:flex;align-items:center;gap:8px;font-size:12px;border-radius:6px 6px 0 0;color:var(--sub)}
+.tab.on{background:#fff;color:var(--text);border:1px solid var(--line);border-bottom:0;height:33px;margin-bottom:-1px}
+.tab .x{color:var(--muted);font-size:11px}
+.tab .mod{color:var(--accent);font-size:16px;line-height:0}
+.tool{height:36px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--line2);font-size:12px;color:var(--sub)}
+.tool b{color:var(--text)}
+.text{flex:1;padding:22px 28px;font-family:"WenQuanYi Zen Hei Mono","WenQuanYi Zen Hei",monospace;font-size:13.5px;line-height:1.9;display:flex;gap:18px}
+.ln{color:#c3c3c3;text-align:right;user-select:none}
+.h{color:var(--accent);font-weight:700}
+.cb{color:var(--purple)}
+.todo-link{font-size:10px;background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:1px 7px;margin-left:8px;font-family:"WenQuanYi Zen Hei"}
+.cursor{display:inline-block;width:1.5px;height:16px;background:var(--text);vertical-align:middle}
+/* desktop */
+.desk{width:1228px;height:788px;position:relative;overflow:hidden;background:radial-gradient(circle at 30% 30%,#7fa7d9,#3b5d93 55%,#1f3359);border-radius:8px}
+.desk:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 70% 110%,rgba(255,255,255,.18),transparent 60%)}
+.taskbar{position:absolute;left:0;right:0;bottom:0;height:48px;background:rgba(240,243,247,.92);display:flex;align-items:center;z-index:3;border-top:1px solid rgba(0,0,0,.08)}
+.tbc{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.tbc i{width:36px;height:36px;border-radius:6px;display:block;background:rgba(0,0,0,.06)}
+.tbc i.w{background:linear-gradient(135deg,#0a84ff,#0050c8)}
+.tray{margin-left:auto;display:flex;align-items:center;gap:12px;padding-right:12px;font-size:11px;color:#222}
+.tray .ti{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:5px;position:relative}
+.tray .ti.hl{background:rgba(0,0,0,.08)}
+.tray .ti .lg{width:18px;height:18px;border-radius:4px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.tray .ti .bd{position:absolute;right:1px;top:1px;background:var(--red);color:#fff;border-radius:7px;font-size:9px;min-width:14px;height:14px;line-height:14px;text-align:center;font-weight:700}
+.clock{text-align:right;line-height:1.3}
+.menu{position:absolute;right:400px;bottom:56px;width:300px;background:rgba(249,249,249,.97);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.3);padding:4px;z-index:4;border:1px solid rgba(0,0,0,.08)}
+.menu .mi{height:32px;display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:4px;font-size:12.5px}
+.menu .mi.hov{background:#ebebeb}
+.menu .mi kbd{margin-left:auto;font-family:inherit;font-size:10.5px;color:var(--muted)}
+.menu .ms{height:1px;background:var(--line);margin:4px 8px}
+.menu .mh2{font-size:11px;color:var(--sub);padding:6px 12px 2px;display:flex;justify-content:space-between}
+.tip{position:absolute;right:30px;bottom:96px;background:#fff;border-radius:5px;padding:6px 10px;font-size:11px;box-shadow:0 2px 10px rgba(0,0,0,.2);z-index:4;display:none}
+.toast{position:absolute;right:14px;bottom:62px;width:364px;background:rgba(250,250,250,.98);border-radius:8px;box-shadow:0 10px 36px rgba(0,0,0,.35);z-index:5;padding:14px 16px;border:1px solid rgba(0,0,0,.06)}
+.toast .th{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--sub)}
+.toast .th .x{margin-left:auto}
+.toast .tt{font-size:14px;font-weight:700;margin-top:10px}
+.toast .tx{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+.toast .tbtn{display:flex;gap:6px;margin-top:12px}
+.toast .tbtn span{flex:1;height:32px;border-radius:5px;background:#ececec;display:flex;align-items:center;justify-content:center;font-size:12px}
+.toast .tbtn span.pr{background:var(--accent);color:#fff}
+.toast .sel{height:32px;border-radius:5px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;padding:0 10px;font-size:12px;margin-top:10px}
+.toast .sel:after{content:"⌄";margin-left:auto;color:var(--sub)}
+.qa{position:absolute;left:320px;top:70px;width:520px;background:rgba(252,252,252,.98);border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.4);z-index:5;overflow:hidden;border:1px solid rgba(0,0,0,.06)}
+.qa .inp{height:58px;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:15.5px;border-bottom:1px solid var(--line)}
+.qa .inp .plus{color:var(--accent);font-size:22px}
+.hl-date{background:#dcebfb;color:#0b4f97;border-radius:4px;padding:0 3px}
+.hl-tag{background:#e8f5e9;color:#1b6e20;border-radius:4px;padding:0 3px}
+.hl-pri{background:#fde7e9;color:var(--red);border-radius:4px;padding:0 3px}
+.hl-rem{background:#f1e8fb;color:var(--purple);border-radius:4px;padding:0 3px}
+.qa .parsed{padding:12px 18px;display:flex;flex-wrap:wrap;gap:8px}
+.qa .parsed span{font-size:12px;border:1px solid var(--line);border-radius:14px;padding:4px 10px;background:#fff}
+.qa .ft{padding:8px 18px;font-size:11px;color:var(--muted);background:#f4f4f4;display:flex;gap:16px}
+.qa .ft kbd{font-family:inherit;border:1px solid var(--line);border-radius:3px;padding:0 4px;background:#fff;color:var(--sub)}
+.widget{position:absolute;left:28px;top:28px;width:270px;background:rgba(255,255,255,.72);border-radius:10px;padding:14px;z-index:2;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+.widget .wt{font-size:12px;color:var(--sub);display:flex;justify-content:space-between}
+.widget .wb{font-size:20px;font-weight:700;margin:2px 0 10px}
+.widget .wr{display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 0;border-top:1px solid rgba(0,0,0,.06)}
+.widget .wr .chk{width:15px;height:15px;font-size:9px}
+.label{position:absolute;z-index:6;background:#ffd84d;color:#222;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<!-- 1. 오늘 화면 -->
+<div class="shot" id="s1"><div class="win">
+  <div class="titlebar"><div class="logo">W</div><div class="appname">DayDeck</div>
+    <div class="search">⌕ 할 일, 일정, 메모 검색<kbd>Ctrl+K</kbd></div>
+    <div class="tb-right"><span>＋</span><span>⚙</span><span>—</span><span>☐</span><span>✕</span></div></div>
+  <div class="body">
+    <div class="nav">
+      <div class="it on"><span class="ic">☀</span>오늘<span class="n">5</span></div>
+      <div class="it"><span class="ic">▦</span>예정<span class="n">7</span></div>
+      <div class="it"><span class="ic">⚠</span>기한 지남<span class="n red">1</span></div>
+      <div class="it"><span class="ic">✓</span>완료됨</div>
+      <div class="sep"></div><div class="grp">목록</div>
+      <div class="it"><span class="ic"><i class="dot" style="background:var(--blue)"></i></span>업무<span class="n">4</span></div>
+      <div class="it"><span class="ic"><i class="dot" style="background:var(--green)"></i></span>개인<span class="n">2</span></div>
+      <div class="it"><span class="ic"><i class="dot" style="background:var(--purple)"></i></span>공부<span class="n">1</span></div>
+      <div class="sep"></div>
+      <div class="it"><span class="ic">📅</span>달력</div>
+      <div class="it"><span class="ic">📝</span>메모</div>
+      <div class="it"><span class="ic">⏱</span>뽀모도로</div>
+    </div>
+    <div class="main">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between">
+        <div><h1>오늘</h1><div class="subh">2026년 10월 28일 수요일</div></div>
+        <div class="prog">오늘 5개 중 3개 완료<div class="bar"><i style="width:60%"></i></div><b style="color:var(--green)">60%</b></div>
+      </div>
+      <div class="card" style="margin-top:16px"><div class="allday"><span style="font-size:11px;color:var(--sub);width:34px">종일</span>
+        <span class="pill" style="background:var(--blue)">프로젝트 마감 주간 (10/26 – 10/30)</span>
+        <span class="pill" style="background:var(--teal)">엄마 생신</span></div></div>
+
+      <div class="sec" style="color:var(--red)">⚠ 기한 지남 1</div>
+      <div class="card">
+        <div class="row over"><div class="chk p3"></div><div><div class="ttl"><span class="warn">⚠</span> 분기 보고서 제출</div>
+          <div class="meta"><span class="due">어제 18:00 마감 · 1일 지남</span><span>업무</span></div></div>
+          <div class="right"><span class="pri" style="color:var(--red)">!!! 높음</span><span class="tag">#업무</span></div></div>
+      </div>
+
+      <div class="sec">해야 할 일 4</div>
+      <div class="card">
+        <div class="row"><div class="chk p2"></div><div><div class="ttl">14:00 팀 회의</div><div class="meta"><span>14:00 – 15:00 · 회의실 A</span><span class="bell">🔔 10분 전</span></div></div>
+          <div class="right"><span class="tag">#업무</span></div></div>
+        <div class="row"><div class="chk p1"></div><div><div class="ttl">디자인 리뷰 자료 준비</div><div class="meta"><span>오늘 17:00까지</span><span>하위 할 일 1/3</span><span class="bell">🔔 16:00</span></div></div>
+          <div class="right"><span class="pri" style="color:var(--blue)">! 낮음</span><span class="tag">#업무</span></div></div>
+        <div class="row"><div class="chk"></div><div><div class="ttl">장보기 (우유, 계란)</div><div class="meta"><span>오늘</span></div></div>
+          <div class="right"><span class="tag">#개인</span></div></div>
+        <div class="row"><div class="chk"></div><div><div class="ttl">영어 단어 30개</div><div class="meta"><span>매일 반복 ↻</span></div></div>
+          <div class="right"><span class="tag">#공부</span></div></div>
+      </div>
+
+      <div class="sec">▾ 완료됨 3</div>
+      <div class="card">
+        <div class="row done"><div class="chk done">✓</div><div><div class="ttl">09:00 스탠드업 미팅</div><div class="meta"><span>09:12 완료</span></div></div></div>
+        <div class="row done"><div class="chk done">✓</div><div><div class="ttl">고객사 메일 회신</div><div class="meta"><span>10:40 완료</span></div></div></div>
+      </div>
+
+      <div class="add"><b>＋</b>할 일 추가 — 예: "내일 오후 3시 치과 #개인 !높음"</div>
+    </div>
+  </div>
+  <div class="status"><span class="ok">✓ 저장됨 14:32</span><span>자동 저장: 1분마다</span><span style="margin-left:auto">🔔 다음 알림 13:50 · 팀 회의</span></div>
+</div></div>
+
+<!-- 2. 주간 달력 -->
+<div class="shot" id="s2"><div class="win">
+  <div class="titlebar"><div class="logo">W</div><div class="appname">DayDeck</div>
+    <div class="search">⌕ 할 일, 일정, 메모 검색<kbd>Ctrl+K</kbd></div>
+    <div class="tb-right"><span>＋</span><span>⚙</span><span>—</span><span>☐</span><span>✕</span></div></div>
+  <div class="body">
+    <div class="nav">
+      <div class="it"><span class="ic">☀</span>오늘<span class="n">5</span></div>
+      <div class="it"><span class="ic">▦</span>예정<span class="n">7</span></div>
+      <div class="it"><span class="ic">⚠</span>기한 지남<span class="n red">1</span></div>
+      <div class="it"><span class="ic">✓</span>완료됨</div>
+      <div class="sep"></div>
+      <div class="it on"><span class="ic">📅</span>달력</div>
+      <div class="it"><span class="ic">📝</span>메모</div>
+      <div class="sep"></div><div class="grp">표시할 달력</div>
+      <div class="it"><span class="ic"><i class="dot" style="background:var(--blue)"></i></span>업무</div>
+      <div class="it"><span class="ic"><i class="dot" style="background:var(--green)"></i></span>개인</div>
+      <div class="it"><span class="ic"><i class="dot" style="background:var(--red)"></i></span>대한민국 공휴일</div>
+      <div class="it"><span class="ic">☑</span>마감 있는 할 일</div>
+    </div>
+    <div class="main">
+      <div class="calhead"><span class="btn">‹</span><span class="btn">›</span><h1 style="font-size:20px">2026년 10월 25일 – 31일</h1><span class="btn">오늘</span>
+        <div class="seg"><span>월</span><span class="on">주</span><span>일</span><span>목록</span></div></div>
+      <div class="week">
+        <div></div>
+        <div class="wd sun">일<b>25</b></div><div class="wd">월<b>26</b></div><div class="wd">화<b>27</b></div><div class="wd today">수<b>28</b></div><div class="wd">목<b>29</b></div><div class="wd">금<b>30</b></div><div class="wd sat">토<b>31</b></div>
+        <div class="adl">종일</div>
+        <div class="adr">
+          <div class="ev" style="left:calc(100%/7*1 + 3px);width:calc(100%/7*5 - 6px);top:6px;background:var(--blue)">프로젝트 마감 주간</div>
+          <div class="ev" style="left:calc(100%/7*3 + 3px);width:calc(100%/7 - 6px);top:29px;background:var(--teal)">엄마 생신</div>
+          <div class="ev" style="left:calc(100%/7*6 + 3px);width:calc(100%/7 - 6px);top:6px;background:var(--orange)">할로윈 파티</div>
+        </div>
+        <div class="times"><div style="top:0">09:00</div><div style="top:52px">10:00</div><div style="top:104px">11:00</div><div style="top:156px">12:00</div><div style="top:208px">13:00</div><div style="top:260px">14:00</div><div style="top:312px">15:00</div><div style="top:364px">16:00</div><div style="top:416px">17:00</div><div style="top:468px">18:00</div></div>
+        <div class="grid">
+          <!-- col width = 100%/7 -->
+          <div class="blk done" style="left:calc(100%/7*1 + 3px);width:calc(100%/7 - 6px);top:2px;height:24px">✓ 스탠드업</div>
+          <div class="blk done" style="left:calc(100%/7*2 + 3px);width:calc(100%/7 - 6px);top:2px;height:24px">✓ 스탠드업</div>
+          <div class="blk done" style="left:calc(100%/7*3 + 3px);width:calc(100%/7 - 6px);top:2px;height:24px">✓ 스탠드업</div>
+          <div class="blk" style="left:calc(100%/7*4 + 3px);width:calc(100%/7 - 6px);top:2px;height:24px;background:#e6efff;border-left-color:var(--blue);color:#183e7a">스탠드업</div>
+          <div class="blk" style="left:calc(100%/7*5 + 3px);width:calc(100%/7 - 6px);top:2px;height:24px;background:#e6efff;border-left-color:var(--blue);color:#183e7a">스탠드업</div>
+          <div class="blk done" style="left:calc(100%/7*1 + 3px);width:calc(100%/7 - 6px);top:60px;height:96px"><b>✓ 기획 회의</b>10:00 – 11:30</div>
+          <div class="blk miss" style="left:calc(100%/7*2 + 3px);width:calc(100%/7 - 6px);top:208px;height:70px;border-left-color:var(--orange);color:#7a3a00"><b>⚠ 거래처 전화</b>13:00 – 14:20<br>미완료</div>
+          <div class="blk done" style="left:calc(100%/7*3 + 3px);width:calc(100%/7 - 6px);top:156px;height:52px"><b>✓ 점심 약속</b>12:00 – 13:00</div>
+          <div class="blk" style="left:calc(100%/7*3 + 3px);width:calc(100%/7 - 6px);top:262px;height:50px;background:#e6efff;border-left-color:var(--blue);color:#183e7a"><b>🔔 팀 회의</b>14:00 – 15:00</div>
+          <div class="blk" style="left:calc(100%/7*3 + 3px);width:calc(100%/7 - 6px);top:416px;height:24px;background:#fff;border:1px dashed var(--blue);border-left:3px solid var(--blue);color:#183e7a">☐ 디자인 리뷰 자료 마감</div>
+          <div class="blk" style="left:calc(100%/7*4 + 3px);width:calc(100%/7 - 6px);top:364px;height:104px;background:#e8f5e9;border-left-color:var(--green);color:#1b5e20"><b>치과 예약</b>16:00 – 18:00<br>강남역</div>
+          <div class="blk" style="left:calc(100%/7*5 + 3px);width:calc(100%/7 - 6px);top:104px;height:78px;background:#e6efff;border-left-color:var(--blue);color:#183e7a"><b>🔔 디자인 리뷰</b>11:00 – 12:30<br>회의실 B</div>
+          <div class="blk" style="left:calc(100%/7*0 + 3px);width:calc(100%/7 - 6px);top:52px;height:104px;background:#f3e9fb;border-left-color:var(--purple);color:#4b1f7a"><b>등산</b>10:00 – 12:00</div>
+          <div class="now" style="top:240px;left:calc(100%/7*3);right:calc(100%/7*3)"></div>
+        </div>
+      </div>
+      <div class="legend"><span><span class="blk" style="position:static;width:14px;height:12px;background:#e6efff;border-left-color:var(--blue);padding:0"></span>예정</span>
+        <span><span class="blk done" style="position:static;width:14px;height:12px;padding:0"></span>완료 (회색 + 취소선 + ✓)</span>
+        <span><span class="blk miss" style="position:static;width:14px;height:12px;padding:0;border-left-color:var(--orange)"></span>지난 미완료 (빗금 + ⚠)</span>
+        <span><span style="width:14px;height:2px;background:var(--red);display:inline-block"></span>현재 시각</span>
+        <span style="margin-left:auto">드래그로 생성 · 이동 · 길이 조절 · 15분 단위</span></div>
+    </div>
+  </div>
+  <div class="status"><span class="ok">✓ 저장됨 14:32</span><span style="margin-left:auto">🔔 다음 알림 13:50 · 팀 회의</span></div>
+</div></div>
+
+<!-- 3. 월간 달력 -->
+<div class="shot" id="s3"><div class="win">
+  <div class="titlebar"><div class="logo">W</div><div class="appname">DayDeck</div>
+    <div class="search">⌕ 할 일, 일정, 메모 검색<kbd>Ctrl+K</kbd></div>
+    <div class="tb-right"><span>＋</span><span>⚙</span><span>—</span><span>☐</span><span>✕</span></div></div>
+  <div class="body">
+    <div class="nav">
+      <div class="it"><span class="ic">☀</span>오늘<span class="n">5</span></div>
+      <div class="it"><span class="ic">▦</span>예정<span class="n">7</span></div>
+      <div class="it"><span class="ic">⚠</span>기한 지남<span class="n red">1</span></div>
+      <div class="it"><span class="ic">✓</span>완료됨</div>
+      <div class="sep"></div>
+      <div class="it on"><span class="ic">📅</span>달력</div>
+      <div class="it"><span class="ic">📝</span>메모</div>
+    </div>
+    <div class="main">
+      <div class="calhead"><span class="btn">‹</span><span class="btn">›</span><h1 style="font-size:20px">2026년 10월</h1><span class="btn">오늘</span>
+        <div class="seg"><span class="on">월</span><span>주</span><span>일</span><span>목록</span></div></div>
+      <div class="month" id="month"></div>
+    </div>
+  </div>
+  <div class="status"><span class="ok">✓ 저장됨 14:32</span><span style="margin-left:auto">🔔 다음 알림 13:50 · 팀 회의</span></div>
+</div></div>
+
+<!-- 4. 메모 -->
+<div class="shot" id="s4"><div class="win">
+  <div class="titlebar"><div class="logo">W</div><div class="appname">DayDeck</div>
+    <div class="search">⌕ 할 일, 일정, 메모 검색<kbd>Ctrl+K</kbd></div>
+    <div class="tb-right"><span>＋</span><span>⚙</span><span>—</span><span>☐</span><span>✕</span></div></div>
+  <div class="body">
+    <div class="nav" style="width:64px;align-items:center">
+      <div class="it" style="padding:0;justify-content:center;width:44px"><span class="ic">☀</span></div>
+      <div class="it" style="padding:0;justify-content:center;width:44px"><span class="ic">▦</span></div>
+      <div class="it" style="padding:0;justify-content:center;width:44px"><span class="ic">📅</span></div>
+      <div class="it on" style="padding:0;justify-content:center;width:44px"><span class="ic">📝</span></div>
+    </div>
+    <div class="main" style="padding:0;flex-direction:row">
+      <div class="notes">
+        <div class="ftree">
+          <div style="font-size:11px;color:var(--muted);padding:0 8px 6px">폴더</div>
+          <div class="f">▾ 📁 업무<span class="n">6</span></div>
+          <div class="f on" style="padding-left:24px">📂 회의록<span class="n">3</span></div>
+          <div class="f" style="padding-left:24px">📁 아이디어<span class="n">2</span></div>
+          <div class="f">▸ 📁 개인<span class="n">4</span></div>
+          <div class="f">▸ 📁 공부<span class="n">5</span></div>
+          <div class="f">📄 빠른 메모<span class="n">2</span></div>
+          <div style="flex:1"></div>
+          <div class="f">🗑 휴지통<span class="n">1</span></div>
+          <div class="f" style="color:var(--accent)">＋ 새 폴더</div>
+        </div>
+        <div class="nlist">
+          <div class="nl-h"><b>회의록</b><span style="color:var(--accent);font-size:18px">＋</span></div>
+          <div class="ni on"><div class="t">📌 2026-10-28 주간회의</div><div class="p">오늘 14:32 · 참석: 김팀장, 이대리… 디자인 리뷰 일정 확정, 분기 보고서…</div></div>
+          <div class="ni"><div class="t">2026-10-21 주간회의</div><div class="p">10월 21일 · 신규 기능 우선순위 논의, 다음 스프린트 목표…</div></div>
+          <div class="ni"><div class="t">고객사 미팅 메모</div><div class="p">10월 15일 · 요구사항 정리: 1) 로그인 개선 2) 알림 설정…</div></div>
+        </div>
+        <div class="editor">
+          <div class="tabs">
+            <div class="tab on">2026-10-28 주간회의.md <span class="mod">●</span></div>
+            <div class="tab">장보기.txt <span class="x">✕</span></div>
+            <div class="tab">아이디어.md <span class="x">✕</span></div>
+            <div class="tab" style="color:var(--accent)">＋</div>
+          </div>
+          <div class="tool"><b>업무 › 회의록</b><span>찾기 Ctrl+F</span><span>바꾸기 Ctrl+H</span><span>줄바꿈 ✓</span><span style="margin-left:auto;color:var(--accent)">● 수정됨 · 3초 후 자동 저장</span></div>
+          <div class="text">
+            <div class="ln">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13</div>
+            <div>
+              <span class="h"># 주간회의 2026-10-28</span><br>
+              참석: 김팀장, 이대리, 박사원<br>
+              <br>
+              <span class="h">## 결정 사항</span><br>
+              - 디자인 리뷰는 10/30(금) 11시로 확정<br>
+              - 분기 보고서 초안은 오늘 중 공유<br>
+              <br>
+              <span class="h">## 할 일</span><br>
+              <span class="cb">- [ ]</span> 디자인 리뷰 자료 준비 <span class="todo-link">↗ 할 일로 등록됨</span><br>
+              <span class="cb">- [x]</span> 일정 공유 메일 발송<br>
+              <span class="cb">- [ ]</span> 거래처 견적 요청 <span class="todo-link">＋ 할 일로 만들기</span><br>
+              <br>
+              다음 회의: 11/4(수) 10시<span class="cursor"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="status"><span style="color:var(--accent)">● 수정됨</span><span>마지막 저장 14:31</span><span>자동 저장: 1분마다 + 편집 후 3초</span><span style="margin-left:auto">Documents\DayDeck\Notes\업무\회의록 · UTF-8 · 13줄</span></div>
+</div></div>
+
+<!-- 5. 바탕화면: 트레이, 토스트, 빠른 추가, 위젯 -->
+<div class="shot" id="s5" style="padding:0;background:none"><div class="desk">
+  <div class="widget">
+    <div class="wt"><span>바탕화면 위젯</span><span>10월 28일 (수)</span></div>
+    <div class="wb">오늘 할 일 2 / 5</div>
+    <div class="wr"><div class="chk p3"></div><span style="color:var(--red);font-weight:700">⚠ 분기 보고서 제출</span></div>
+    <div class="wr"><div class="chk p2"></div><span>14:00 팀 회의</span></div>
+    <div class="wr"><div class="chk p1"></div><span>디자인 리뷰 자료 준비</span></div>
+    <div class="wr"><div class="chk done">✓</div><span style="text-decoration:line-through;color:var(--muted)">스탠드업 미팅</span></div>
+  </div>
+
+  <div class="qa">
+    <div class="inp"><span class="plus">＋</span><span><span class="hl-rem">매주</span> <span class="hl-date">월요일 오전 9시</span> 주간회의 <span class="hl-tag">#업무</span> <span class="hl-pri">!높음</span> <span class="hl-rem">10분전 알림</span><span class="cursor"></span></span></div>
+    <div class="parsed">
+      <span>📅 일정</span><span>🕘 매주 월 09:00 – 10:00</span><span>↻ 매주 반복</span><span>🔔 10분 전</span><span>📋 업무</span><span style="color:var(--red)">!!! 높음</span>
+    </div>
+    <div class="ft"><span><kbd>Enter</kbd> 저장</span><span><kbd>Tab</kbd> 상세 입력</span><span><kbd>Esc</kbd> 취소</span><span style="margin-left:auto">빠른 추가 · Ctrl+Alt+Space</span></div>
+  </div>
+
+  <div class="menu">
+    <div class="mi hov">＋ 빠른 추가<kbd>Ctrl+Alt+Space</kbd></div>
+    <div class="mi">📝 새 메모<kbd>Ctrl+Alt+N</kbd></div>
+    <div class="ms"></div>
+    <div class="mh2"><span>오늘 · 미완료 3</span><span>다음: 13:50</span></div>
+    <div class="mi"><div class="chk p3" style="width:15px;height:15px"></div><span style="color:var(--red);font-weight:700">⚠ 분기 보고서 제출</span></div>
+    <div class="mi"><div class="chk p2" style="width:15px;height:15px"></div>14:00 팀 회의</div>
+    <div class="mi"><div class="chk p1" style="width:15px;height:15px"></div>디자인 리뷰 자료 준비</div>
+    <div class="ms"></div>
+    <div class="mi">🔕 알림 일시 중지<kbd>▸</kbd></div>
+    <div class="mi">열기<kbd>Ctrl+Alt+T</kbd></div>
+    <div class="mi">설정</div>
+    <div class="mi">종료</div>
+  </div>
+
+  <div class="toast" style="bottom:300px">
+    <div class="th"><div class="logo" style="width:16px;height:16px;font-size:10px">W</div>DayDeck · 알림<span class="x">✕</span></div>
+    <div class="tt">🔔 10분 후: 팀 회의</div>
+    <div class="tx">오늘 14:00 – 15:00 · 회의실 A</div>
+    <div class="sel">스누즈: 5분</div>
+    <div class="tbtn"><span class="pr">✓ 완료</span><span>스누즈</span><span>열기</span></div>
+  </div>
+
+  <div class="toast">
+    <div class="th"><div class="logo" style="width:16px;height:16px;font-size:10px">W</div>DayDeck · 놓친 알림<span class="x">✕</span></div>
+    <div class="tt">⚠ 놓친 알림 2개 (절전 중)</div>
+    <div class="tx">· 분기 보고서 제출 — 어제 18:00 마감<br>· 거래처 전화 — 어제 13:00</div>
+    <div class="tbtn"><span class="pr">모두 보기</span><span>1시간 후 다시</span></div>
+  </div>
+
+  <div class="taskbar">
+    <div class="tbc"><i class="w"></i><i></i><i></i><i></i><i></i></div>
+    <div class="tray"><span>^</span><span>한</span><span>📶</span><span>🔊</span>
+      <div class="ti hl"><div class="lg">W</div><div class="bd">1</div></div>
+      <div class="clock">13:50<br>2026-10-28</div></div>
+  </div>
+
+  <div class="label" style="left:28px;top:232px">① 바탕화면 위젯 (항상 아래)</div>
+  <div class="label" style="left:330px;top:40px">② 빠른 추가 (Ctrl+Alt+Space, 자연어 입력)</div>
+  <div class="label" style="right:14px;bottom:494px">③ 알림 토스트 (완료/스누즈 버튼)</div>
+  <div class="label" style="right:400px;bottom:404px">④ 트레이 오른쪽 클릭 메뉴</div>
+  <div class="label" style="right:14px;bottom:226px">⑤ 놓친 알림 (절전 복귀 시)</div>
+  
+  <div class="label" style="right:255px;bottom:13px">⑥ 트레이 아이콘 + 기한 지남 배지 →</div>
+</div></div>
+
+<script>
+// 월간 달력 생성 (2026년 10월, 일요일 시작)
+const m=document.getElementById('month');
+['일','월','화','수','목','금','토'].forEach((d,i)=>{const e=document.createElement('div');e.className='mh';e.textContent=d;if(i==0)e.style.color='var(--red)';if(i==6)e.style.color='var(--blue)';m.appendChild(e)});
+const ev={
+  3:[['bar2','개천절','var(--red)']],
+  5:[['','09:00 월간 계획','var(--blue)','fin']],
+  9:[['bar2','한글날','var(--red)']],
+  12:[['','10:00 기획 킥오프','var(--blue)','fin'],['','19:00 저녁 약속','var(--green)','fin']],
+  15:[['','14:00 고객사 미팅','var(--blue)','fin']],
+  17:[['bar2','가족 여행','var(--green)']],18:[['bar2','가족 여행','var(--green)']],
+  20:[['','☑ 세금 납부','var(--green)','fin']],
+  21:[['','10:00 주간회의','var(--blue)','fin'],['','15:00 면접','var(--blue)','fin']],
+  26:[['bar2','프로젝트 마감 주간','var(--blue)'],['','10:00 기획 회의','var(--blue)','fin']],
+  27:[['bar2','프로젝트 마감 주간','var(--blue)'],['','⚠ 13:00 거래처 전화','','od'],['','⚠ 분기 보고서 제출','','od']],
+  28:[['bar2','프로젝트 마감 주간','var(--blue)'],['bar2','엄마 생신','var(--teal)'],['','14:00 팀 회의','var(--blue)'],['','☐ 디자인 리뷰 자료','var(--blue)'],['more','+2개 더']],
+  29:[['bar2','프로젝트 마감 주간','var(--blue)'],['','16:00 치과 예약','var(--green)']],
+  30:[['bar2','프로젝트 마감 주간','var(--blue)'],['','11:00 디자인 리뷰','var(--blue)']],
+  31:[['','19:00 할로윈 파티','var(--orange)']],
+};
+const hol={3:'개천절',9:'한글날'};
+for(let i=0;i<35;i++){
+  let day=i-3, out=false, label;
+  if(day<1){label=30+day;out=true}else if(day>31){label=day-31;out=true}else label=day;
+  const c=document.createElement('div');c.className='mc';
+  if(i%7==0)c.classList.add('sun');if(i%7==6)c.classList.add('sat');if(out)c.classList.add('out');if(!out&&day==28)c.classList.add('today');
+  const d=document.createElement('div');d.className='d';d.innerHTML='<span>'+label+'</span>'+(!out&&hol[day]?'<small>'+hol[day]+'</small>':'');
+  if(!out&&hol[day])d.style.color='var(--red)';
+  c.appendChild(d);
+  if(!out&&ev[day])ev[day].forEach(([k,t,col,st])=>{
+    if(k=='bar2'&&hol[day])return;
+    const e=document.createElement('div');
+    if(k=='more'){e.className='more';e.textContent=t}
+    else if(k=='bar2'){e.className='me bar2';e.style.background=col;e.textContent=t}
+    else{e.className='me'+(st?' '+st:'');e.innerHTML=(st=='od'?'':'<i class="dot" style="width:7px;height:7px;background:'+(st=='fin'?'#c8c8c8':col)+'"></i>')+(st=='fin'?'✓ ':'')+t}
+    c.appendChild(e)});
+  m.appendChild(c);
+}
+</script>
+</body>
+</html>

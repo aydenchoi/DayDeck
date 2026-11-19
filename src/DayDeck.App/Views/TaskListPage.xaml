@@ -1,0 +1,254 @@
+<UserControl x:Class="DayDeck.App.Views.TaskListPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DayDeck.App.ViewModels"
+             xmlns:views="clr-namespace:DayDeck.App.Views"
+             xmlns:todo="clr-namespace:DayDeck.Core.Todo;assembly=DayDeck.Core">
+    <UserControl.Resources>
+
+        <!-- 완료 체크 원. 색약 사용자도 구분하도록 색 + 채움 + ✓ 기호를 함께 쓴다 (설계 §5.2) -->
+        <Style x:Key="CheckCircle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid Background="Transparent">
+                            <Ellipse x:Name="Circle" Width="18" Height="18" StrokeThickness="1.6"
+                                     Stroke="{TemplateBinding BorderBrush}" Fill="{TemplateBinding Background}" />
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Circle" Property="StrokeThickness" Value="2.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate DataType="{x:Type vm:SectionRow}">
+            <Border Background="Transparent" Padding="2,14,0,6" Cursor="Hand"
+                    MouseLeftButtonDown="OnSectionClick" Tag="{Binding}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Chevron}" Width="14" FontSize="11" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="HeaderText" Text="{Binding Header}" FontSize="12.5" FontWeight="SemiBold"
+                               Foreground="{DynamicResource SubTextBrush}" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Tone}" Value="{x:Static vm:SectionTone.Alert}">
+                    <Setter TargetName="HeaderText" Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:TaskRowViewModel}">
+            <Border x:Name="Root" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="1,0,1,1"
+                    Padding="12,0,14,0" MinHeight="50">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="Check" Style="{StaticResource CheckCircle}" Click="OnCheckClick" Tag="{Binding}"
+                            AutomationProperties.Name="완료 전환"
+                            BorderBrush="{Binding PriorityBrush}" Background="Transparent" Foreground="White"
+                            ToolTip="완료 (Space)">
+                        <TextBlock x:Name="CheckMark" Text="✓" FontSize="11" FontWeight="Bold" Visibility="Collapsed" />
+                    </Button>
+                    <StackPanel Grid.Column="1" Margin="12,7" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="Warn" Text="⚠ " FontSize="14" Foreground="{DynamicResource DangerBrush}" Visibility="Collapsed" />
+                            <TextBlock x:Name="TitleText" Text="{Binding Title}" FontSize="14" TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextBrush}" />
+                        </StackPanel>
+                        <TextBlock x:Name="MetaText" Text="{Binding Meta}" FontSize="11.5" Margin="0,2,0,0"
+                                   Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="PriorityText" Text="{Binding PriorityText}" FontSize="11" FontWeight="Bold"
+                                   Foreground="{Binding PriorityBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Border x:Name="ListChip" CornerRadius="10" Background="{DynamicResource ChipBrush}" Padding="8,2">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="{Binding ListBrush}" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding ListName}" FontSize="11" Foreground="{DynamicResource SubTextBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding HasMeta}" Value="False">
+                    <Setter TargetName="MetaText" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasList}" Value="False">
+                    <Setter TargetName="ListChip" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+                <!-- 기한 지남: 빨간 원 + ⚠ + 굵은 제목 + 빨간 마감 문구 + 연한 빨강 배경 -->
+                <DataTrigger Binding="{Binding State}" Value="{x:Static todo:TaskDisplayState.Overdue}">
+                    <Setter TargetName="Warn" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="TitleText" Property="FontWeight" Value="Bold" />
+                    <Setter TargetName="MetaText" Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                    <Setter TargetName="Check" Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource OverdueRowBrush}" />
+                </DataTrigger>
+                <!-- 완료: 초록 채움 + ✓ + 취소선 + 회색 -->
+                <DataTrigger Binding="{Binding State}" Value="{x:Static todo:TaskDisplayState.Completed}">
+                    <Setter TargetName="Check" Property="Background" Value="{DynamicResource SuccessBrush}" />
+                    <Setter TargetName="Check" Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+                    <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="TitleText" Property="TextDecorations" Value="Strikethrough" />
+                    <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                    <Setter TargetName="MetaText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                    <Setter TargetName="PriorityText" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="ListChip" Property="Opacity" Value="0.5" />
+                </DataTrigger>
+                <!-- 취소: 점선 원 + 취소선 + 기울임 -->
+                <DataTrigger Binding="{Binding State}" Value="{x:Static todo:TaskDisplayState.Cancelled}">
+                    <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="CheckMark" Property="Text" Value="⊘" />
+                    <Setter TargetName="CheckMark" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                    <Setter TargetName="Check" Property="BorderBrush" Value="{DynamicResource MutedBrush}" />
+                    <Setter TargetName="TitleText" Property="TextDecorations" Value="Strikethrough" />
+                    <Setter TargetName="TitleText" Property="FontStyle" Value="Italic" />
+                    <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                    <Setter TargetName="PriorityText" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+                <!-- 설정 "완료 항목 흐리게" -->
+                <DataTrigger Binding="{Binding IsDimmed}" Value="True">
+                    <Setter TargetName="Root" Property="Opacity" Value="0.5" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:EventRowViewModel}">
+            <Border x:Name="Root" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="1,0,1,1" Padding="0,0,14,0" MinHeight="40"
+                    Cursor="Hand">
+                <DockPanel>
+                    <Border DockPanel.Dock="Left" Width="4" Background="{Binding ColorBrush}" Margin="0,0,12,0" />
+                    <TextBlock x:Name="WhenText" DockPanel.Dock="Left" Text="{Binding When}" Width="120" FontSize="12.5" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SubTextBrush}" />
+                    <TextBlock x:Name="DetailText" DockPanel.Dock="Right" Text="{Binding Detail}" FontSize="11.5" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SubTextBrush}" />
+                    <TextBlock x:Name="TitleText" Text="{Binding Title}" FontSize="14" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextBrush}" />
+                </DockPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                    <Setter TargetName="TitleText" Property="TextDecorations" Value="Strikethrough" />
+                    <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                    <Setter TargetName="WhenText" Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsPastAndOpen}" Value="True">
+                    <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource WarnTextBrush}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <Style x:Key="RowContainer" TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Grid>
+                            <ContentPresenter />
+                            <Border x:Name="Selection" IsHitTestVisible="False" Background="{DynamicResource SelectionBrush}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="3,0,0,0" Visibility="Collapsed" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Selection" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- 머리글은 선택/키보드 이동 대상이 아니다 -->
+                <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                    <Setter Property="Focusable" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- 할 일을 고르면 목록은 왼쪽(너비 조절·저장), 상세(메모처럼 고치기)는 나머지를 차지한다 (ApplyDetailLayout). -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="ListColumn" Width="*" MinWidth="300" />
+            <ColumnDefinition x:Name="DetailColumn" Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <DockPanel Grid.Column="0">
+            <!-- 머리글 -->
+            <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock x:Name="TitleText" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                    <TextBlock x:Name="SubtitleText" FontSize="13" Margin="0,2,0,0" Foreground="{DynamicResource SubTextBrush}" />
+                </StackPanel>
+                <!-- 목록 화면: 정렬 (마감순 / 직접) -->
+                <Button x:Name="SortButton" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="10,2" FontSize="12"
+                        Visibility="Collapsed" Click="OnSortClick" AutomationProperties.Name="정렬" />
+                <!-- 예정·기한 지남·완료됨 화면: 기간 (7일 / 14일) -->
+                <ComboBox x:Name="RangeChoice" Width="90" HorizontalAlignment="Right" VerticalAlignment="Bottom" Visibility="Collapsed"
+                          SelectionChanged="OnRangeChanged" AutomationProperties.Name="기간" ToolTip="며칠치를 볼지 (기본 7일)" />
+                <StackPanel x:Name="ProgressPanel" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                    <TextBlock x:Name="ProgressText" FontSize="12" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center" />
+                    <ProgressBar x:Name="ProgressBar" Width="140" Height="6" Margin="10,0" Maximum="1"
+                                 Foreground="{DynamicResource SuccessBrush}" Background="{DynamicResource TrackBrush}" BorderThickness="0" />
+                    <TextBlock x:Name="ProgressPercent" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
+
+            <!-- 추가 입력 -->
+            <Border x:Name="AddBox" DockPanel.Dock="Bottom" Margin="0,12,0,0" Background="{DynamicResource CardBrush}" CornerRadius="6"
+                    BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Height="42">
+                <Grid>
+                    <TextBlock Text="＋" FontSize="18" Foreground="{DynamicResource AccentBrush}" Margin="14,0,0,2" VerticalAlignment="Center" />
+                    <TextBox x:Name="AddInput" Margin="40,0,12,0" VerticalAlignment="Center" BorderThickness="0" FontSize="13.5"
+                             Background="Transparent" KeyDown="OnAddKeyDown" />
+                    <TextBlock x:Name="AddPlaceholder" Margin="42,0,12,0" VerticalAlignment="Center" FontSize="13.5"
+                               Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"
+                               Text="할 일 추가 — 예: 내일 3시 치과 #개인 !높음 (Enter, Ctrl+N)" />
+                </Grid>
+            </Border>
+
+            <Grid>
+                <ListBox x:Name="Rows" BorderThickness="0" Background="Transparent"
+                         ItemContainerStyle="{StaticResource RowContainer}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         VirtualizingPanel.ScrollUnit="Pixel"
+                         SelectionMode="Single"
+                         SelectionChanged="OnRowSelectionChanged"
+                         PreviewKeyDown="OnRowsKeyDown"
+                         PreviewMouseLeftButtonDown="OnRowsMouseDown" PreviewMouseMove="OnRowsMouseMove"
+                         AllowDrop="True" DragOver="OnRowsDragOver" Drop="OnRowsDrop"
+                         ContextMenuOpening="OnRowsContextMenuOpening">
+                    <ListBox.ContextMenu>
+                        <ContextMenu />
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <TextBlock x:Name="EmptyText" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13"
+                           Foreground="{DynamicResource MutedBrush}" TextAlignment="Center" Visibility="Collapsed" />
+            </Grid>
+        </DockPanel>
+
+        <views:TaskDetailPanel x:Name="Detail" Grid.Column="1" Margin="20,0,0,0" Visibility="Collapsed"
+                               CloseRequested="OnDetailCloseRequested" />
+        <!-- 목록 너비: 목록과 상세 사이를 끌어서 조절, 저장 (상세가 열려 있을 때만) -->
+        <views:PaneSplitter Grid.Column="1" HorizontalAlignment="Left" Margin="7,0,0,0"
+                            TargetColumn="{x:Reference ListColumn}" Edge="Right" Key="tasks.list" MinSize="300" MaxSize="900" KeepRest="380"
+                            RestoreOnLoad="False"
+                            Visibility="{Binding Visibility, ElementName=Detail}" AutomationProperties.AutomationId="DetailSplitter" />
+    </Grid>
+</UserControl>

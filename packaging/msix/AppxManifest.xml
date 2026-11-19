@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Microsoft Store(MSIX) 패키지 매니페스트 템플릿. scripts/build-msix.ps1이 {{...}} 자리를 채운다.
+     {{IdentityName}} 등은 packaging/msix/identity.json, {{Version}}은 Directory.Build.props에서 온다. -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap3 desktop rescap">
+
+  <Identity Name="{{IdentityName}}" Publisher="{{Publisher}}" Version="{{Version}}" ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>{{DisplayName}}</DisplayName>
+    <PublisherDisplayName>{{PublisherDisplayName}}</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>할 일, 달력 일정, 메모, 알림을 한곳에서 관리하는 트레이 상주 프로그램</Description>
+  </Properties>
+
+  <Dependencies>
+    <!-- Windows 10 2004(19041) 이상. 앱은 Windows 11을 목표로 한다. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="ko-KR" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="DayDeck.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="{{DisplayName}}"
+        Description="할 일, 달력 일정, 메모, 알림 관리"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- 로그인 자동 실행. TaskId는 StartupRegistration.StartupTaskId와 같아야 한다.
+             Enabled="false"로 두고 앱이 설정(기본: 켬)에 따라 RequestEnableAsync로 켠다. -->
+        <desktop:Extension Category="windows.startupTask" Executable="DayDeck.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="DayDeckStartup" Enabled="false" DisplayName="{{DisplayName}}" />
+        </desktop:Extension>
+        <!-- 실행 창(Win+R)이나 바로 가기에서 "DayDeck --quick-add"처럼 부를 수 있게 한다. -->
+        <uap3:Extension Category="windows.appExecutionAlias" Executable="DayDeck.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap3:AppExecutionAlias>
+            <desktop:ExecutionAlias Alias="DayDeck.exe" />
+          </uap3:AppExecutionAlias>
+        </uap3:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

@@ -1,0 +1,6 @@
+node_modules
+build/
+out/*.png
+out/*.restored.json
+out/fonts.json
+out/restore-report.json

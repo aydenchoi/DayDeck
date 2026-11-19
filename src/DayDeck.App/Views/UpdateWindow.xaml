@@ -1,0 +1,27 @@
+<Window x:Class="DayDeck.App.Views.UpdateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DayDeck 업데이트" Width="540" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" FontFamily="{DynamicResource UiFont}" Background="{DynamicResource SurfaceBrush}">
+    <StackPanel Margin="22,18,22,18">
+        <TextBlock Text="새 버전이 나왔습니다" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+        <TextBlock x:Name="VersionText" FontSize="13" Margin="0,4,0,0" Foreground="{DynamicResource SubTextBrush}" />
+        <Border BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="4" Margin="0,12,0,0" Height="220">
+            <FlowDocumentScrollViewer x:Name="Notes" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="바뀐 점" />
+        </Border>
+        <TextBlock x:Name="InfoText" FontSize="12" Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource SubTextBrush}"
+                   Text="업데이트하기 전에 데이터를 자동으로 백업합니다. 설치가 끝나면 프로그램이 다시 시작되고, 할 일·일정·메모(Data 폴더)는 그대로입니다." />
+        <StackPanel x:Name="ProgressPanel" Margin="0,12,0,0" Visibility="Collapsed">
+            <ProgressBar x:Name="Progress" Height="6" Maximum="1" AutomationProperties.Name="업데이트 진행" />
+            <TextBlock x:Name="StatusText" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource SubTextBrush}" />
+        </StackPanel>
+        <DockPanel Margin="0,16,0,0">
+            <Button x:Name="SkipButton" Content="이 버전 건너뛰기" Padding="10,4" Click="OnSkip"
+                    ToolTip="이 버전은 다시 알리지 않습니다 (설정 → 업데이트 → 지금 확인으로는 설치 가능)" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="UpdateButton" Content="지금 업데이트" Padding="16,4" Click="OnUpdate" IsDefault="True" Style="{StaticResource AccentButton}" />
+                <Button x:Name="LaterButton" Content="나중에" Width="80" Padding="0,4" Margin="8,0,0,0" IsCancel="True" Click="OnLater" />
+            </StackPanel>
+        </DockPanel>
+    </StackPanel>
+</Window>

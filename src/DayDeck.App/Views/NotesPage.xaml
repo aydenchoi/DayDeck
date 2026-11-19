@@ -1,0 +1,327 @@
+<UserControl x:Class="DayDeck.App.Views.NotesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DayDeck.App.ViewModels"
+             xmlns:views="clr-namespace:DayDeck.App.Views">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <Style x:Key="PaneHeader" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+            <Setter Property="Margin" Value="8,0,0,6" />
+        </Style>
+        <Style x:Key="FlatButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+        <!-- 서식 도구 단추: 정사각형에 가깝게 -->
+        <Style x:Key="FormatButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="MinWidth" Value="28" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Padding" Value="6,0" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style x:Key="ViewModeButton" TargetType="{x:Type RadioButton}">
+            <Setter Property="GroupName" Value="NoteView" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RadioButton}">
+                        <Border x:Name="Bd" Padding="9,3" Background="Transparent" CornerRadius="4">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource NavSelectedBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource NavHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToolButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="-28,-22,-24,-16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="FolderColumn" Width="210" />
+            <ColumnDefinition x:Name="ListColumn" Width="270" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- 폴더 -->
+        <DockPanel Grid.Column="0" Background="{DynamicResource SurfaceBrush}">
+            <StackPanel DockPanel.Dock="Bottom" Margin="6,6,6,10">
+                <Button Style="{StaticResource FlatButton}" x:Name="TrashButton" Click="OnShowTrash">
+                    <TextBlock x:Name="TrashText" Text="🗑 휴지통" FontSize="13" />
+                </Button>
+                <Button Style="{StaticResource FlatButton}" Click="OnNewFolder">
+                    <TextBlock Text="＋ 새 폴더" FontSize="13" Foreground="{DynamicResource AccentBrush}" />
+                </Button>
+            </StackPanel>
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource PaneHeader}" Text="폴더" Margin="14,16,0,6" />
+            <TreeView x:Name="FolderTree" BorderThickness="0" Background="Transparent" Margin="4,0"
+                      SelectedItemChanged="OnFolderSelected" ContextMenuOpening="OnFolderMenuOpening"
+                      AllowDrop="True" Drop="OnFolderDrop" DragOver="OnFolderDragOver"
+                      PreviewMouseLeftButtonDown="OnFolderMouseDown" PreviewMouseMove="OnFolderMouseMove">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                        <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+                        <Setter Property="Padding" Value="2,3" />
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:NoteFolderViewModel}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Icon}" Margin="0,0,6,0" />
+                            <TextBlock Text="{Binding Name}" FontSize="13" />
+                            <TextBlock Text="{Binding CountText}" FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="8,1,0,0" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+                <TreeView.ContextMenu>
+                    <ContextMenu />
+                </TreeView.ContextMenu>
+            </TreeView>
+        </DockPanel>
+
+        <!-- 메모 목록 -->
+        <DockPanel Grid.Column="1" Background="{DynamicResource CardBrush}">
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1,0,1,1" Padding="14,12,10,10">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="＋" FontSize="18" Style="{StaticResource FlatButton}" Padding="6,0"
+                                Foreground="{DynamicResource AccentBrush}" Click="OnNewNote" ToolTip="새 메모 (Ctrl+N)" AutomationProperties.Name="새 메모" />
+                        <TextBlock x:Name="ListTitle" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <Grid Margin="0,8,0,0">
+                        <TextBox x:Name="SearchBox" Padding="22,4,4,4" TextChanged="OnSearchChanged" AutomationProperties.Name="메모 검색" />
+                        <TextBlock Text="⌕" Margin="7,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False" />
+                        <TextBlock x:Name="SearchPlaceholder" Text="이 폴더에서 검색" Margin="24,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                   Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Grid>
+                <ListBox x:Name="NoteList" BorderThickness="1,0,1,0" BorderBrush="{DynamicResource LineBrush}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                         SelectionChanged="OnNoteSelected" MouseDoubleClick="OnNoteDoubleClick"
+                         ContextMenuOpening="OnNoteMenuOpening" PreviewMouseLeftButtonDown="OnNoteListMouseDown" MouseMove="OnNoteListMouseMove">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:NoteListItemViewModel}">
+                            <Border Padding="12,9" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding FolderPath}" FontSize="10.5" Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis"
+                                               Margin="0,0,0,1" ToolTip="{Binding FolderPath}" />
+                                    <TextBlock Text="{Binding DisplayTitle}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,2,0,0" />
+                                    <TextBlock Text="{Binding Preview}" FontSize="11.5" Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"
+                                               MaxHeight="34" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.ContextMenu>
+                        <ContextMenu />
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <TextBlock x:Name="ListEmpty" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="12"
+                           Foreground="{DynamicResource MutedBrush}" Visibility="Collapsed" />
+            </Grid>
+        </DockPanel>
+
+        <!-- 편집기 -->
+        <DockPanel Grid.Column="2" Background="{DynamicResource CardBrush}">
+            <!-- 탭 -->
+            <Border DockPanel.Dock="Top" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl x:Name="TabStrip" Margin="6,6,6,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:NoteTabViewModel}">
+                                <Border x:Name="TabBorder" Padding="12,6,6,6" Margin="0,0,2,0" CornerRadius="6,6,0,0" Cursor="Hand"
+                                        MouseLeftButtonUp="OnTabClick" Tag="{Binding}" Background="Transparent" ToolTip="{Binding Path}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Title}" FontSize="12" MaxWidth="180" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding DirtyMark}" Foreground="{DynamicResource AccentBrush}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        <Button Content="✕" FontSize="10" Background="Transparent" BorderThickness="0" Padding="4,0" Margin="4,0,0,0"
+                                                Foreground="{DynamicResource MutedBrush}" Click="OnTabClose" Tag="{Binding}" Cursor="Hand"
+                                                AutomationProperties.Name="탭 닫기" ToolTip="닫기 (Ctrl+W)" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <!-- 도구 모음 -->
+            <Border DockPanel.Dock="Top" x:Name="Toolbar" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1" Padding="14,4,10,4" Visibility="Collapsed">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Right" x:Name="SaveStatusText" FontSize="11.5" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="BreadcrumbText" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        <Button Style="{StaticResource ToolButton}" Content="찾기" ToolTip="Ctrl+F" Click="OnShowFind" />
+                        <Button Style="{StaticResource ToolButton}" Content="바꾸기" ToolTip="Ctrl+H" Click="OnShowReplace" />
+                        <ToggleButton x:Name="WrapToggle" Content="줄바꿈" FontSize="12" Padding="6,2" Margin="0,0,4,0" Click="OnWrapToggled" />
+                        <Button Style="{StaticResource ToolButton}" Content="☑ 할 일로 만들기" Click="OnMakeTasks"
+                                ToolTip="선택한 줄(또는 커서가 있는 줄)을 오늘 할 일로 추가합니다" />
+                        <Button Style="{StaticResource ToolButton}" Content="📌 스티커로" Click="OnMakeSticky"
+                                ToolTip="이 메모를 바탕화면 스티커로 띄웁니다 (내용은 같은 파일)" />
+                        <Button Style="{StaticResource ToolButton}" Content="🕘 기록" Click="OnShowHistory" AutomationProperties.Name="메모 기록"
+                                ToolTip="예전 버전 보기·되돌리기 (10분마다 자동으로 남김)" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- 서식 (마크다운 메모만) -->
+            <Border DockPanel.Dock="Top" x:Name="FormatBar" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1" Padding="12,3,10,3" Visibility="Collapsed">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="5" Padding="1">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="PreviewModeButton" Style="{StaticResource ViewModeButton}" Content="보기" Checked="OnViewModeChanged"
+                                         ToolTip="서식이 적용된 모양 그대로 바로 고칩니다 (기본). 링크는 Ctrl+클릭" AutomationProperties.Name="보기 모드" />
+                            <RadioButton x:Name="LiveModeButton" Style="{StaticResource ViewModeButton}" Content="옵시디언" Checked="OnViewModeChanged"
+                                         ToolTip="옵시디언처럼: 원문에 서식을 입혀 보이고, 커서가 있는 줄만 서식 기호(**, #, 링크 주소)가 보입니다. 링크는 Ctrl+클릭"
+                                         AutomationProperties.Name="옵시디언 모드" />
+                            <RadioButton x:Name="SplitModeButton" Style="{StaticResource ViewModeButton}" Content="나란히" Checked="OnViewModeChanged"
+                                         ToolTip="왼쪽은 마크다운 원문, 오른쪽은 서식이 적용된 모양" AutomationProperties.Name="나란히 보기" />
+                            <RadioButton x:Name="EditModeButton" Style="{StaticResource ViewModeButton}" Content="편집" Checked="OnViewModeChanged"
+                                         ToolTip="마크다운 원문 편집" AutomationProperties.Name="편집 보기" />
+                        </StackPanel>
+                    </Border>
+                    <WrapPanel x:Name="FormatButtons">
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatBold" ToolTip="굵게 (Ctrl+B)" AutomationProperties.Name="굵게">
+                            <TextBlock Text="B" FontWeight="Bold" />
+                        </Button>
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatItalic" ToolTip="기울임 (Ctrl+I)" AutomationProperties.Name="기울임">
+                            <TextBlock Text="I" FontStyle="Italic" FontFamily="Georgia, Times New Roman" />
+                        </Button>
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatUnderline" ToolTip="밑줄 (Ctrl+U)" AutomationProperties.Name="밑줄">
+                            <TextBlock Text="U" TextDecorations="Underline" />
+                        </Button>
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatStrike" ToolTip="취소선 (Ctrl+Shift+X)" AutomationProperties.Name="취소선">
+                            <TextBlock Text="S" TextDecorations="Strikethrough" />
+                        </Button>
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatHighlight" ToolTip="형광펜 (Ctrl+Shift+H)" AutomationProperties.Name="형광펜">
+                            <TextBlock Text="H" Background="#FFF3A3" Foreground="#1B1B1B" Padding="3,0" />
+                        </Button>
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatColor" ToolTip="글자색" AutomationProperties.Name="글자색" x:Name="ColorButton">
+                            <StackPanel>
+                                <TextBlock Text="A" HorizontalAlignment="Center" Margin="0,-1,0,-2" />
+                                <Border Height="3" Width="14" Background="#C42B1C" x:Name="ColorSwatch" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatCode" ToolTip="코드 (Ctrl+E)" AutomationProperties.Name="코드"
+                                Content="&lt;/&gt;" FontFamily="Consolas" FontSize="12" />
+                        <Border Width="1" Margin="6,4" Background="{DynamicResource LineBrush}" />
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatLink" ToolTip="링크 넣기 (Ctrl+K)" AutomationProperties.Name="링크" Content="🔗" />
+                        <Button Style="{StaticResource FormatButton}" Click="OnInsertImage" AutomationProperties.Name="그림 넣기" Content="🖼"
+                                ToolTip="그림 넣기 — 파일을 고르거나, 그림을 복사해서 Ctrl+V, 또는 그림 파일을 편집기로 끌어다 놓기" />
+                        <Border Width="1" Margin="6,4" Background="{DynamicResource LineBrush}" />
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatHeading" ToolTip="제목 (Ctrl+Alt+1~3, 본문 Ctrl+Alt+0)" AutomationProperties.Name="제목"
+                                Content="제목 ▾" FontSize="12" />
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatBullet" ToolTip="글머리 목록 (Ctrl+Shift+8)" AutomationProperties.Name="글머리 목록" Content="• 목록" FontSize="12" />
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatNumbered" ToolTip="번호 목록 (Ctrl+Shift+7)" AutomationProperties.Name="번호 목록" Content="1. 번호" FontSize="12" />
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatTask" ToolTip="체크 목록 (Ctrl+Shift+9)" AutomationProperties.Name="체크 목록" Content="☐ 체크" FontSize="12" />
+                        <Button Style="{StaticResource FormatButton}" Click="OnFormatQuote" ToolTip="인용" AutomationProperties.Name="인용" Content="❝ 인용" FontSize="12" />
+                    </WrapPanel>
+                </DockPanel>
+            </Border>
+            <Border DockPanel.Dock="Top" x:Name="PlainTextHint" Padding="14,3" Visibility="Collapsed" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
+                <TextBlock FontSize="11.5" Foreground="{DynamicResource MutedBrush}"
+                           Text="일반 텍스트(.txt) 메모입니다. 굵게·색·링크 같은 서식은 .md 메모에서 쓸 수 있습니다 (메모 목록에서 오른쪽 클릭 → .md로 바꾸기)." />
+            </Border>
+
+            <!-- 찾기/바꾸기 -->
+            <Border DockPanel.Dock="Top" x:Name="FindBar" Background="{DynamicResource SubtleBrush}" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1" Padding="14,6" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="FindBox" Width="180" Padding="3" KeyDown="OnFindKeyDown" AutomationProperties.Name="찾을 내용" />
+                    <Button Content="다음" Margin="4,0,0,0" Padding="8,2" Click="OnFindNext" ToolTip="F3" />
+                    <StackPanel x:Name="ReplacePanel" Orientation="Horizontal" Margin="12,0,0,0">
+                        <TextBox x:Name="ReplaceBox" Width="160" Padding="3" AutomationProperties.Name="바꿀 내용" />
+                        <Button Content="바꾸기" Margin="4,0,0,0" Padding="8,2" Click="OnReplace" />
+                        <Button Content="모두 바꾸기" Margin="4,0,0,0" Padding="8,2" Click="OnReplaceAll" />
+                    </StackPanel>
+                    <TextBlock x:Name="FindStatus" Margin="10,0,0,0" FontSize="11.5" VerticalAlignment="Center" Foreground="{DynamicResource SubTextBrush}" />
+                    <Button Content="✕" Margin="8,0,0,0" Background="Transparent" BorderThickness="0" Click="OnCloseFind" />
+                </StackPanel>
+            </Border>
+
+            <!-- 외부 변경 충돌 -->
+            <Border DockPanel.Dock="Top" x:Name="ConflictBar" Background="{DynamicResource NoticeBrush}" Padding="14,6" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⚠ 다른 프로그램에서 이 메모가 바뀌었습니다." VerticalAlignment="Center" FontSize="12" />
+                    <Button Content="다시 읽기" Margin="10,0,0,0" Padding="8,2" Click="OnConflictReload" />
+                    <Button Content="내 내용 유지" Margin="4,0,0,0" Padding="8,2" Click="OnConflictKeep" />
+                </StackPanel>
+            </Border>
+
+            <!-- 상태 -->
+            <Border DockPanel.Dock="Bottom" x:Name="EditorStatus" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,1,0,0" Padding="14,3" Visibility="Collapsed">
+                <TextBlock x:Name="EditorStatusText" FontSize="11" Foreground="{DynamicResource SubTextBrush}" />
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="EditorColumn" Width="*" />
+                    <ColumnDefinition x:Name="PreviewColumn" Width="0" />
+                </Grid.ColumnDefinitions>
+                <Grid x:Name="EditorHost" />
+                <views:PaneSplitter x:Name="PreviewSplitter" Grid.Column="1" HorizontalAlignment="Left" Margin="-3,0,0,0" Panel.ZIndex="10"
+                                    TargetColumn="{x:Reference PreviewColumn}" Edge="Left" Key="notes.preview" MinSize="200" MaxSize="1600" KeepRest="240" RestoreOnLoad="False"
+                                    Visibility="Collapsed" AutomationProperties.AutomationId="PreviewSplitter" />
+                <Border x:Name="PreviewHost" Grid.Column="1" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="1,0,0,0" Visibility="Collapsed">
+                    <FlowDocumentScrollViewer x:Name="Preview" VerticalScrollBarVisibility="Auto" IsToolBarVisible="False"
+                                              AutomationProperties.Name="서식 미리보기" AutomationProperties.AutomationId="NotePreview" />
+                </Border>
+                <TextBlock x:Name="EditorEmpty" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="13"
+                           Foreground="{DynamicResource MutedBrush}"
+                           Text="메모를 선택하거나 ＋ 로 새 메모를 만드세요.&#x0a;입력하는 대로 자동 저장됩니다." />
+            </Grid>
+        </DockPanel>
+        <!-- 폴더·메모 목록 너비: 끌어서 조절, 저장 -->
+        <views:PaneSplitter Grid.Column="0" HorizontalAlignment="Right" Margin="0,0,-3,0" Panel.ZIndex="10"
+                            TargetColumn="{x:Reference FolderColumn}" Key="notes.folders" MinSize="140" MaxSize="480" KeepRest="320"
+                            AutomationProperties.AutomationId="FolderSplitter" />
+        <views:PaneSplitter Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,-3,0" Panel.ZIndex="10"
+                            TargetColumn="{x:Reference ListColumn}" Key="notes.list" MinSize="180" MaxSize="560" KeepRest="320"
+                            AutomationProperties.AutomationId="NoteListSplitter" />
+    </Grid>
+</UserControl>

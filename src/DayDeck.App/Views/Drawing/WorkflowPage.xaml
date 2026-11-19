@@ -1,0 +1,218 @@
+<UserControl x:Class="DayDeck.App.Views.Drawing.WorkflowPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:DayDeck.App.Views"
+             xmlns:drawing="clr-namespace:DayDeck.App.Views.Drawing">
+    <UserControl.Resources>
+        <Style x:Key="FlatButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <!-- 도구 단추 (고른 도구는 강조) -->
+        <Style x:Key="ToolRadio" TargetType="{x:Type RadioButton}">
+            <Setter Property="GroupName" Value="DrawingTool" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RadioButton}">
+                        <Border x:Name="Bd" Padding="6,0" Margin="1,0" Background="Transparent" CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource NavHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectionBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PropLabel" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+            <Setter Property="Margin" Value="0,10,0,4" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="-28,-22,-24,-16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="ListColumn" Width="230" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- 그림 목록 -->
+        <DockPanel Grid.Column="0" Background="{DynamicResource SurfaceBrush}">
+            <StackPanel DockPanel.Dock="Bottom" Margin="6,6,6,10">
+                <Button Style="{StaticResource FlatButton}" HorizontalContentAlignment="Left" Click="OnImport"
+                        ToolTip="excalidraw.com이나 Obsidian에서 저장한 .excalidraw 파일을 가져옵니다">
+                    <TextBlock Text="📂 파일 가져오기" FontSize="13" />
+                </Button>
+                <Button Style="{StaticResource FlatButton}" HorizontalContentAlignment="Left" Click="OnOpenFolder">
+                    <TextBlock Text="🗀 폴더 열기" FontSize="13" />
+                </Button>
+            </StackPanel>
+            <DockPanel DockPanel.Dock="Top" Margin="14,14,8,8">
+                <Button DockPanel.Dock="Right" Content="＋" FontSize="18" Style="{StaticResource FlatButton}" Padding="6,0"
+                        Foreground="{DynamicResource AccentBrush}" Click="OnNew" ToolTip="새 워크플로우" AutomationProperties.Name="새 워크플로우" />
+                <TextBlock Text="워크플로우" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}" />
+            </DockPanel>
+            <Grid>
+                <ListBox x:Name="DrawingList" BorderThickness="0" Background="Transparent" Margin="4,0" VirtualizingPanel.IsVirtualizing="False"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="OnDrawingSelected"
+                         ContextMenuOpening="OnListMenuOpening" AutomationProperties.Name="워크플로우 목록">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+                            <Setter Property="Padding" Value="10,6" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontSize="13" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Modified, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.ContextMenu>
+                        <ContextMenu />
+                    </ListBox.ContextMenu>
+                </ListBox>
+                <TextBlock x:Name="ListEmpty" Text="＋ 로 새 워크플로우를 만드세요." HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0"
+                           FontSize="12" Foreground="{DynamicResource MutedBrush}" Visibility="Collapsed" />
+            </Grid>
+        </DockPanel>
+
+        <!-- 그림판 -->
+        <DockPanel Grid.Column="1">
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1" Padding="10,5" Background="{DynamicResource SurfaceBrush}">
+                <!-- 좁으면 두 줄로 넘어간다 (오른쪽 단추가 잘려 눌리지 않던 문제) -->
+                <WrapPanel>
+                    <StackPanel Orientation="Horizontal" x:Name="ToolButtons" Margin="0,0,12,0">
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Select" Content="⬉" ToolTip="선택 (V 또는 1)" AutomationProperties.Name="선택" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Hand" Content="✋" ToolTip="화면 이동 (H, 또는 Space를 누른 채 끌기)" AutomationProperties.Name="손" Checked="OnToolChecked" />
+                        <Border Width="1" Margin="4,6" Background="{DynamicResource LineBrush}" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Rectangle" Content="▭" ToolTip="사각형 (R 또는 2) — 단계" AutomationProperties.Name="사각형" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Diamond" Content="◇" ToolTip="마름모 (D 또는 3) — 판단·분기" AutomationProperties.Name="마름모" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Ellipse" Content="◯" ToolTip="원 (O 또는 4) — 시작·끝" AutomationProperties.Name="원" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Arrow" Content="→" ToolTip="화살표 (A 또는 5). 도형에서 도형으로 그으면 붙어서 따라다닙니다" AutomationProperties.Name="화살표" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Line" Content="╱" ToolTip="선 (L 또는 6)" AutomationProperties.Name="선" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Pen" Content="✎" ToolTip="펜 (P 또는 7)" AutomationProperties.Name="펜" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Text" Content="A" ToolTip="글자 (T 또는 8). 도형을 두 번 누르면 도형 안에 글자" AutomationProperties.Name="글자" Checked="OnToolChecked" />
+                        <RadioButton Style="{StaticResource ToolRadio}" Tag="Eraser" Content="⌫" ToolTip="지우개 (E 또는 0)" AutomationProperties.Name="지우개" Checked="OnToolChecked" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="SaveStatus" FontSize="11.5" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <Button Style="{StaticResource FlatButton}" Content="↶" FontSize="15" Click="OnUndo" ToolTip="되돌리기 (Ctrl+Z)" AutomationProperties.Name="되돌리기" />
+                        <Button Style="{StaticResource FlatButton}" Content="↷" FontSize="15" Click="OnRedo" ToolTip="다시 실행 (Ctrl+Y)" AutomationProperties.Name="다시 실행" />
+                        <Button Style="{StaticResource FlatButton}" Content="－" Click="OnZoomOut" ToolTip="축소 (Ctrl+-, Ctrl+휠)" AutomationProperties.Name="축소" />
+                        <Button Style="{StaticResource FlatButton}" x:Name="ZoomText" Content="100%" FontSize="12" Click="OnZoomFit" MinWidth="48"
+                                ToolTip="누르면 전체 보기 (Shift+1). Ctrl+0은 100%" AutomationProperties.Name="전체 보기" />
+                        <Button Style="{StaticResource FlatButton}" Content="＋" Click="OnZoomIn" ToolTip="확대 (Ctrl++, Ctrl+휠)" AutomationProperties.Name="확대" />
+                        <Border Width="1" Margin="6,4" Background="{DynamicResource LineBrush}" />
+                        <Button Style="{StaticResource FlatButton}" x:Name="CanvasBackgroundButton" Content="🎨 바탕색" FontSize="12" Click="OnCanvasBackground"
+                                ToolTip="그림 바탕색 (Excalidraw의 캔버스 배경)" AutomationProperties.Name="바탕색" />
+                        <Button Style="{StaticResource FlatButton}" Content="📋 그림 복사" FontSize="12" Click="OnCopyImage"
+                                ToolTip="PNG 그림으로 클립보드에 복사 (선택한 것이 있으면 그것만). 메일·메신저·문서에 붙여 넣기" />
+                        <Button Style="{StaticResource FlatButton}" Content="💾 PNG" FontSize="12" Click="OnExportPng" ToolTip="PNG 파일로 저장" />
+                    </StackPanel>
+                </WrapPanel>
+            </Border>
+            <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,1,0,0" Padding="14,3">
+                <TextBlock x:Name="HintText" FontSize="11" Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis"
+                           Text="도형을 고르고 Ctrl+→↓←↑ 로 화살표로 이어진 다음 단계를 만듭니다 · 두 번 눌러 글자 · Ctrl+휠 확대 · 파일은 excalidraw.com에서 그대로 열 수 있는 .excalidraw" />
+            </Border>
+            <Grid>
+                <drawing:DrawingCanvas x:Name="Board" AutomationProperties.Name="워크플로우 그림판" AutomationProperties.AutomationId="DrawingCanvas" />
+                <TextBlock x:Name="CanvasEmpty" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="13" IsHitTestVisible="False"
+                           Foreground="{DynamicResource MutedBrush}" Visibility="Collapsed"
+                           Text="R 사각형 · D 마름모 · A 화살표로 흐름을 그려 보세요.&#x0a;도형을 고르고 Ctrl+→ 를 누르면 다음 단계가 이어서 생깁니다." />
+                <TextBlock x:Name="NoDrawing" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontSize="13"
+                           Foreground="{DynamicResource MutedBrush}" Visibility="Collapsed" Background="{DynamicResource CardBrush}"
+                           Text="왼쪽에서 워크플로우를 고르거나 ＋ 로 새로 만드세요." />
+
+                <!-- 바탕색 (Excalidraw의 "캔버스 배경": 자주 쓰는 바탕 5가지 + 지금 색 → 모든 색) -->
+                <Border x:Name="CanvasPanel" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12" Padding="12,4,8,10" Width="212"
+                        Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="8"
+                        Visibility="Collapsed" AutomationProperties.Name="바탕색 창" Panel.ZIndex="5">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource FlatButton}" Content="✕" FontSize="11" Padding="6,2"
+                                    Click="OnCloseCanvasPanel" AutomationProperties.Name="바탕색 닫기" ToolTip="닫기" />
+                            <TextBlock Style="{StaticResource PropLabel}" Text="바탕색" />
+                        </DockPanel>
+                        <WrapPanel x:Name="CanvasColors" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 고른 요소의 모양 -->
+                <Border x:Name="PropertyPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12" Padding="12,4,12,12" Width="228"
+                        Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="8"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource PropLabel}" Text="선 색" />
+                        <WrapPanel x:Name="StrokeColors" />
+                        <StackPanel x:Name="BackgroundSection">
+                            <TextBlock Style="{StaticResource PropLabel}" Text="채우기" />
+                            <WrapPanel x:Name="BackgroundColors" />
+                            <WrapPanel x:Name="FillStyles" Margin="0,4,0,0" />
+                        </StackPanel>
+                        <StackPanel x:Name="StrokeSection">
+                            <TextBlock Style="{StaticResource PropLabel}" Text="선 굵기 · 모양" />
+                            <WrapPanel x:Name="StrokeWidths" />
+                            <WrapPanel x:Name="StrokeStyles" Margin="0,4,0,0" />
+                            <TextBlock Style="{StaticResource PropLabel}" Text="손그림 정도" />
+                            <WrapPanel x:Name="Roughnesses" />
+                        </StackPanel>
+                        <StackPanel x:Name="OpacitySection">
+                            <TextBlock Style="{StaticResource PropLabel}" Text="불투명도" />
+                            <DockPanel>
+                                <TextBlock x:Name="OpacityText" DockPanel.Dock="Right" Width="38" TextAlignment="Right" FontSize="11.5"
+                                           VerticalAlignment="Center" Foreground="{DynamicResource SubTextBrush}" />
+                                <Slider x:Name="OpacitySlider" Minimum="0" Maximum="100" SmallChange="10" LargeChange="10" TickFrequency="10"
+                                        IsSnapToTickEnabled="True" IsMoveToPointEnabled="True" AutomationProperties.Name="불투명도" />
+                            </DockPanel>
+                        </StackPanel>
+                        <StackPanel x:Name="EdgeSection">
+                            <TextBlock Style="{StaticResource PropLabel}" Text="모서리" />
+                            <WrapPanel x:Name="Edges" />
+                        </StackPanel>
+                        <StackPanel x:Name="ArrowSection">
+                            <TextBlock Style="{StaticResource PropLabel}" Text="화살표 모양" />
+                            <WrapPanel x:Name="ArrowTypes" />
+                            <TextBlock Style="{StaticResource PropLabel}" Text="시작 머리" />
+                            <WrapPanel x:Name="StartHeads" />
+                            <TextBlock Style="{StaticResource PropLabel}" Text="끝 머리" />
+                            <WrapPanel x:Name="EndHeads" />
+                        </StackPanel>
+                        <StackPanel x:Name="FontSection">
+                            <TextBlock Style="{StaticResource PropLabel}" Text="글꼴" />
+                            <WrapPanel x:Name="FontFamilies" />
+                            <TextBlock Style="{StaticResource PropLabel}" Text="글자 크기" />
+                            <WrapPanel x:Name="FontSizes" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Content="복제" Padding="8,2" Margin="0,0,4,0" Click="OnDuplicate" ToolTip="Ctrl+D" />
+                            <Button Content="삭제" Padding="8,2" Click="OnDelete" ToolTip="Delete" Foreground="{DynamicResource DangerBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DockPanel>
+
+        <views:PaneSplitter Grid.Column="0" HorizontalAlignment="Right" Margin="0,0,-3,0" Panel.ZIndex="10"
+                            TargetColumn="{x:Reference ListColumn}" Key="drawings.list" MinSize="160" MaxSize="480" KeepRest="400"
+                            AutomationProperties.AutomationId="DrawingListSplitter" />
+    </Grid>
+</UserControl>

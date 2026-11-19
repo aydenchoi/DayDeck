@@ -43,7 +43,7 @@
         <desktop:Extension Category="windows.startupTask" Executable="DayDeck.exe" EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask TaskId="DayDeckStartup" Enabled="false" DisplayName="{{DisplayName}}" />
         </desktop:Extension>
-        <!-- 실행 창(Win+R)이나 바로 가기에서 "DayDeck --quick-add"처럼 부를 수 있게 한다. -->
+        <!-- 실행 창(Win+R)이나 바로 가기에서 DayDeck.exe 이름으로 부를 수 있게 한다 (빠른 추가 등 명령줄 인수 포함). -->
         <uap3:Extension Category="windows.appExecutionAlias" Executable="DayDeck.exe" EntryPoint="Windows.FullTrustApplication">
           <uap3:AppExecutionAlias>
             <desktop:ExecutionAlias Alias="DayDeck.exe" />

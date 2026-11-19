@@ -69,6 +69,20 @@ jobs:
           name: DayDeck-msix
           path: artifacts/msix/
 
+      # Store 등록용 스크린샷 (1920x1080). 화면 해상도를 바꾸므로 다른 테스트가 모두 끝난 뒤에 돈다.
+      # 실패해도 빌드와 릴리스는 막지 않는다.
+      - name: Store screenshots (1920x1080)
+        continue-on-error: true
+        shell: pwsh
+        run: ./scripts/store-screenshots.ps1 -Exe artifacts/publish/win-x64/DayDeck.exe -SeedProject tools/DayDeck.DevSeed -OutDir artifacts/store-screenshots
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: store-screenshots
+          path: artifacts/store-screenshots/
+          if-no-files-found: ignore
+
       - uses: actions/upload-artifact@v5
         if: always()
         with:

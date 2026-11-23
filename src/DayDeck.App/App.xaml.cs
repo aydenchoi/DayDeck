@@ -108,9 +108,15 @@ public partial class App : Application
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.GetCultureInfo("ko-KR").IetfLanguageTag)));
 
         // Microsoft Store(MSIX) 판은 설치 폴더가 읽기 전용이라 패키지 전용 폴더를 쓴다.
-        Paths = PackageInfo.FamilyName is { } packageFamily
+        var home = PackageInfo.FamilyName is { } packageFamily
             ? AppPaths.ForPackage(packageFamily)
             : AppPaths.Resolve(AppContext.BaseDirectory);
+        if (ResolveDataLocation(home) is not { } paths)
+        {
+            Shutdown(0);
+            return;
+        }
+        Paths = paths;
         Paths.EnsureCreated();
         Log.Initialize(Paths.LogsDirectory);
         RegisterExceptionHandlers();
@@ -148,9 +154,39 @@ public partial class App : Application
         _tray = new TrayService(this);
         _tray.ToolTipText = "DayDeck · 시작하는 중…";
         _instance.StartListening(command => Dispatcher.BeginInvoke(() => HandleCommand(command)));
-        Log.Info($"트레이 표시 {stopwatch.ElapsedMilliseconds}ms (portable={Paths.IsPortable}, packaged={Paths.IsPackaged}, minimized={_options.Minimized})");
+        Log.Info($"트레이 표시 {stopwatch.ElapsedMilliseconds}ms (portable={Paths.IsPortable}, packaged={Paths.IsPackaged}, relocated={Paths.IsRelocated}, minimized={_options.Minimized})");
 
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () => InitializeServices(stopwatch));
+    }
+
+    /// <summary>
+    /// 데이터 폴더를 옮겼으면 그 위치를 쓴다. 그 폴더가 없으면(외장 디스크를 뺐을 때 등) 다시 시도할지,
+    /// 이번에는 기본 위치를 쓸지, 끝낼지 묻는다. 끝내면 null.
+    /// </summary>
+    private static AppPaths? ResolveDataLocation(AppPaths home)
+    {
+        while (DataLocation.ReadPointer(home.HomeDirectory) is { } moved)
+        {
+            if (Directory.Exists(moved))
+            {
+                return home.WithDataDirectory(moved);
+            }
+            var answer = MessageBox.Show(
+                $"데이터 폴더를 찾을 수 없습니다.\n\n{moved}\n\n"
+                + "외장 디스크나 네트워크 드라이브라면 연결한 뒤 [예]를 눌러 다시 시도하세요.\n"
+                + $"[아니요]를 누르면 이번에는 기본 위치({home.HomeDirectory})를 씁니다. 옮긴 위치는 그대로 기억합니다.\n"
+                + "[취소]를 누르면 DayDeck을 끝냅니다.",
+                "DayDeck", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            if (answer == MessageBoxResult.No)
+            {
+                return home;
+            }
+            if (answer != MessageBoxResult.Yes)
+            {
+                return null;
+            }
+        }
+        return home;
     }
 
     private void InitializeServices(Stopwatch stopwatch)
@@ -304,6 +340,17 @@ public partial class App : Application
     internal void RestartAfterUpdate(string exe)
     {
         RestartPath = exe;
+        RestartShowWindow = _mainWindow?.IsVisible == true;
+        ExitApplication();
+    }
+
+    /// <summary>앱을 끝낸 뒤 실행할 데이터·메모 폴더 옮기기 (Program이 처리하고 다시 시작한다).</summary>
+    internal Relocation? PendingRelocation { get; private set; }
+
+    /// <summary>데이터·메모 폴더를 옮긴다: 저장하고 끝낸 뒤(DB를 닫은 뒤) 옮기고 다시 시작한다.</summary>
+    internal void RestartToRelocate(Relocation relocation)
+    {
+        PendingRelocation = relocation;
         RestartShowWindow = _mainWindow?.IsVisible == true;
         ExitApplication();
     }

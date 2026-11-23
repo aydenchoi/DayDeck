@@ -6,6 +6,8 @@ namespace DayDeck.Core;
 /// 기본 위치는 실행 파일 폴더 아래 <c>Data</c>다 (exe와 Data를 함께 옮기면 끝).
 /// 실행 파일 폴더에 쓸 수 없을 때(Program Files 등)만 <c>%APPDATA%\DayDeck</c>를 쓴다.
 /// Microsoft Store(MSIX) 판은 설치 폴더가 읽기 전용이라 패키지 전용 폴더(LocalState)를 쓴다.
+/// 사용자가 데이터 폴더를 다른 곳으로 옮기면 기본 위치(<see cref="HomeDirectory"/>)에 새 위치만 적어 둔다
+/// (<see cref="DataLocation"/>).
 /// </summary>
 public sealed class AppPaths
 {
@@ -16,14 +18,30 @@ public sealed class AppPaths
     public const string DataFolderName = "Data";
     public const string DefaultNotesFolderName = "Notes";
 
-    public AppPaths(string dataDirectory, bool isPortable, bool isPackaged = false)
+    public AppPaths(string dataDirectory, bool isPortable, bool isPackaged = false, string? homeDirectory = null)
     {
         DataDirectory = Path.GetFullPath(dataDirectory);
         IsPortable = isPortable;
         IsPackaged = isPackaged;
+        HomeDirectory = homeDirectory is null ? DataDirectory : Path.GetFullPath(homeDirectory);
     }
 
     public string DataDirectory { get; }
+
+    /// <summary>
+    /// 기본 데이터 폴더 (exe 옆 Data, %APPDATA%\DayDeck, Store 판은 LocalState). 데이터 폴더를 옮겼으면
+    /// 여기에 새 위치를 적은 <see cref="DataLocation.PointerFileName"/>이 있다. 옮기지 않았으면 <see cref="DataDirectory"/>와 같다.
+    /// </summary>
+    public string HomeDirectory { get; }
+
+    /// <summary>사용자가 데이터 폴더를 기본 위치가 아닌 곳으로 옮겼다.</summary>
+    public bool IsRelocated => !DataLocation.SamePath(HomeDirectory, DataDirectory);
+
+    /// <summary>같은 기본 위치를 두고 데이터 폴더만 <paramref name="dataDirectory"/>로 바꾼 경로.</summary>
+    public AppPaths WithDataDirectory(string dataDirectory) =>
+        DataLocation.SamePath(dataDirectory, HomeDirectory)
+            ? new AppPaths(HomeDirectory, IsPortable, IsPackaged)
+            : new AppPaths(dataDirectory, isPortable: false, IsPackaged, HomeDirectory);
 
     /// <summary>데이터가 실행 파일 폴더에 있다 (기본). false면 %APPDATA%로 대신 쓰는 중.</summary>
     public bool IsPortable { get; }

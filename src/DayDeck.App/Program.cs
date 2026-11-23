@@ -41,7 +41,14 @@ internal static class Program
         var app = new App(options, instance);
         app.InitializeComponent();
         var exitCode = app.Run();
-        if (app.RestartPath is { } exe)
+        if (app.PendingRelocation is { } relocation)
+        {
+            // 데이터·메모 폴더 옮기기: 앱이 모두 저장하고 DB를 닫은 지금 옮기고, 단일 인스턴스를 놓은 뒤 다시 시작한다.
+            DataRelocator.Run(relocation, app.Paths);
+            instance.Dispose();
+            DataRelocator.Restart(app.RestartShowWindow ? "" : StartupOptions.MinimizedArg);
+        }
+        else if (app.RestartPath is { } exe)
         {
             // 업데이트를 설치했다: 단일 인스턴스를 먼저 놓아야 새 버전이 첫 인스턴스로 시작한다.
             instance.Dispose();

@@ -120,12 +120,18 @@ public partial class SettingsPage : UserControl
         var notesRoot = paths.ResolveNotesRoot(settings.Notes.RootPath);
         NotesFolder.Text = notesRoot;
         NotesFolder.ToolTip = notesRoot;
-        PortableHint.Text = (paths.IsPackaged
-            ? "Microsoft Store 판은 Windows가 정한 앱 전용 폴더에 저장합니다. 앱을 제거하면 이 폴더도 지워지니, 필요하면 먼저 백업하세요."
+        ResetDataFolder.IsEnabled = paths.IsRelocated;
+        ResetNotesFolder.IsEnabled = !DataLocation.SamePath(notesRoot, paths.DefaultNotesRoot);
+        PortableHint.Text = (paths.IsRelocated
+            ? $"데이터를 직접 고른 폴더에 저장합니다. 기본 위치({paths.HomeDirectory})에는 이 위치만 적어 둡니다."
+              + (paths.IsPackaged ? "\nStore 판을 제거해도 이 폴더의 데이터는 남습니다. 다시 설치한 뒤 \"위치 변경…\"으로 이 폴더를 고르면 이어서 쓸 수 있습니다." : "")
+            : paths.IsPackaged
+            ? "Microsoft Store 판은 Windows가 정한 앱 전용 폴더에 저장합니다. 앱을 제거하면 이 폴더도 지워지니, 필요하면 먼저 백업하세요.\n"
+              + "\"위치 변경…\"으로 다른 폴더(예: D:\\DayDeck, OneDrive)에 두면 앱을 제거해도 데이터가 남습니다."
             : paths.IsPortable
             ? "데이터는 실행 파일 옆의 Data 폴더에 저장됩니다. exe와 Data 폴더를 함께 옮기면 다른 PC(또는 USB)에서 그대로 쓸 수 있습니다."
             : "실행 파일 폴더에 쓸 수 없어(예: Program Files) %APPDATA%\\DayDeck에 저장합니다. 쓸 수 있는 폴더로 exe를 옮기면 그 옆 Data를 씁니다.")
-            + "\n다른 PC로 옮기려면 트레이에서 종료한 뒤 데이터 폴더를 통째로 복사하세요.";
+            + "\n폴더를 바꾸면 DayDeck이 저장하고 끝난 뒤 옮기고 다시 시작합니다. 다른 PC로 옮기려면 트레이에서 종료한 뒤 데이터 폴더를 통째로 복사하세요.";
 
         UpdateBackupStatus();
 
@@ -473,4 +479,136 @@ public partial class SettingsPage : UserControl
 
     private void OnOpenDataFolder(object sender, RoutedEventArgs e) =>
         Process.Start(new ProcessStartInfo("explorer.exe", $"\"{_app.Paths.DataDirectory}\"") { UseShellExecute = true });
+
+    private void OnOpenNotesFolder(object sender, RoutedEventArgs e)
+    {
+        System.IO.Directory.CreateDirectory(_app.Notes.Root);
+        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{_app.Notes.Root}\"") { UseShellExecute = true });
+    }
+
+    /// <summary>데이터 폴더를 다른 곳(다른 디스크, OneDrive 등)으로 옮긴다. Store 판은 앱을 제거해도 데이터가 남게 된다.</summary>
+    private void OnChangeDataFolder(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "데이터 폴더 위치",
+            InitialDirectory = System.IO.Path.GetDirectoryName(_app.Paths.DataDirectory) ?? _app.Paths.DataDirectory,
+        };
+        if (dialog.ShowDialog(Window.GetWindow(this)) == true)
+        {
+            RelocateData(DataLocation.ChooseDataTarget(dialog.FolderName), toHome: false);
+        }
+    }
+
+    private void OnResetDataFolder(object sender, RoutedEventArgs e) => RelocateData(_app.Paths.HomeDirectory, toHome: true);
+
+    private void RelocateData(string target, bool toHome)
+    {
+        var paths = _app.Paths;
+        if (DataLocation.ValidateTarget(paths.DataDirectory, target) is { } error)
+        {
+            Warn(error);
+            return;
+        }
+        if (!toHome && paths.IsPackaged && DataLocation.IsUnderAppData(target))
+        {
+            Warn("Microsoft Store 판은 AppData 아래 폴더를 데이터 폴더로 쓸 수 없습니다 (Windows가 앱 전용 위치로 바꿔 저장합니다).\n"
+                 + "문서, 다른 디스크(D:), OneDrive 같은 폴더를 고르세요.");
+            return;
+        }
+
+        if (DataLocation.ContainsData(target))
+        {
+            var useExisting = Ask(
+                $"이 폴더에는 이미 DayDeck 데이터가 있습니다.\n\n{target}\n\n"
+                + $"이 데이터로 바꿔 쓸까요? 지금 데이터는 지금 폴더({paths.DataDirectory})에 그대로 남습니다.\n\n"
+                + "DayDeck이 저장하고 끝난 뒤 다시 시작합니다.");
+            if (useExisting)
+            {
+                _app.RestartToRelocate(new Services.Relocation(Services.RelocationKind.Data, paths.DataDirectory, target, MoveFiles: false));
+            }
+            return;
+        }
+
+        var notesRoot = _app.Notes.Root;
+        var notesStay = !DataLocation.IsInside(notesRoot, paths.DataDirectory);
+        var confirmed = Ask(
+            $"데이터(할 일·일정·설정·메모·그림·백업)를 옮깁니다.\n\n{paths.DataDirectory}\n→ {target}\n\n"
+            + (notesStay ? $"메모 폴더({notesRoot})는 데이터 폴더 밖에 있어 그대로 둡니다.\n\n" : "")
+            + "DayDeck이 저장하고 끝난 뒤 옮기고 다시 시작합니다. 데이터가 많으면 조금 걸릴 수 있습니다.");
+        if (confirmed)
+        {
+            _app.RestartToRelocate(new Services.Relocation(Services.RelocationKind.Data, paths.DataDirectory, target, MoveFiles: true));
+        }
+    }
+
+    /// <summary>메모 폴더를 다른 곳(예: 옵시디언 보관함, OneDrive)으로 바꾼다. 지금 메모를 옮길지 고른다.</summary>
+    private void OnChangeNotesFolder(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "메모 폴더 위치", InitialDirectory = _app.Notes.Root };
+        if (dialog.ShowDialog(Window.GetWindow(this)) == true)
+        {
+            RelocateNotes(System.IO.Path.GetFullPath(dialog.FolderName));
+        }
+    }
+
+    private void OnResetNotesFolder(object sender, RoutedEventArgs e) => RelocateNotes(_app.Paths.DefaultNotesRoot);
+
+    private void RelocateNotes(string target)
+    {
+        var paths = _app.Paths;
+        var current = _app.Notes.Root;
+        if (DataLocation.ValidateTarget(current, target) is { } error)
+        {
+            Warn(error);
+            return;
+        }
+        if (paths.IsPackaged && DataLocation.IsUnderAppData(target) && !DataLocation.IsInside(target, paths.DataDirectory))
+        {
+            Warn("Microsoft Store 판은 AppData 아래 폴더를 메모 폴더로 쓸 수 없습니다 (Windows가 앱 전용 위치로 바꿔 저장합니다).\n"
+                 + "문서, 다른 디스크(D:), OneDrive 같은 폴더를 고르세요.");
+            return;
+        }
+
+        var count = System.IO.Directory.Exists(current)
+            ? System.IO.Directory.EnumerateFiles(current, "*", System.IO.SearchOption.AllDirectories).Count()
+            : 0;
+        bool move;
+        if (count == 0)
+        {
+            if (!Ask($"메모 폴더를 바꿉니다.\n\n{target}\n\nDayDeck이 저장하고 끝난 뒤 다시 시작합니다."))
+            {
+                return;
+            }
+            move = false;
+        }
+        else
+        {
+            var answer = MessageBox.Show(Window.GetWindow(this),
+                $"메모 폴더를 바꿉니다.\n\n{current}\n→ {target}\n\n"
+                + $"지금 메모 폴더의 파일 {count}개를 새 폴더로 옮길까요?\n"
+                + "[예] 옮기기   [아니요] 옮기지 않고 새 폴더의 메모 쓰기 (지금 메모는 그대로 남음)\n\n"
+                + "DayDeck이 저장하고 끝난 뒤 다시 시작합니다.",
+                "DayDeck", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+            if (answer is not (MessageBoxResult.Yes or MessageBoxResult.No))
+            {
+                return;
+            }
+            move = answer == MessageBoxResult.Yes;
+            if (move && DataLocation.FindConflicts(current, target).Take(4).ToList() is { Count: > 0 } conflicts)
+            {
+                Warn("새 폴더에 같은 이름의 파일이 있어 옮길 수 없습니다.\n\n" + string.Join("\n", conflicts.Take(3))
+                     + (conflicts.Count > 3 ? "\n…" : "")
+                     + "\n\n옮기지 않고 그 폴더를 쓰려면 다시 고른 뒤 [아니요]를 누르세요.");
+                return;
+            }
+        }
+        _app.RestartToRelocate(new Services.Relocation(Services.RelocationKind.Notes, current, target, move));
+    }
+
+    private bool Ask(string message) =>
+        MessageBox.Show(Window.GetWindow(this), message, "DayDeck", MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK;
+
+    private void Warn(string message) =>
+        MessageBox.Show(Window.GetWindow(this), message, "DayDeck", MessageBoxButton.OK, MessageBoxImage.Warning);
 }

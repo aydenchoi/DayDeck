@@ -229,11 +229,20 @@
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="데이터 폴더" Margin="0,6,16,6" VerticalAlignment="Center" FontSize="13" />
                     <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DataFolder" VerticalAlignment="Center" FontSize="12"
                                Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis" />
-                    <Button Grid.Row="0" Grid.Column="2" Content="열기" Padding="12,3" Margin="12,4,0,4" Click="OnOpenDataFolder" />
+                    <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Margin="12,4,0,4">
+                        <Button Content="열기" Padding="12,3" Click="OnOpenDataFolder" />
+                        <Button Content="위치 변경…" Padding="10,3" Margin="6,0,0,0" Click="OnChangeDataFolder" />
+                        <Button Content="기본 위치로" Padding="10,3" Margin="6,0,0,0" Click="OnResetDataFolder" x:Name="ResetDataFolder" />
+                    </StackPanel>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="메모 폴더" Margin="0,6,16,6" VerticalAlignment="Center" FontSize="13" />
                     <TextBlock Grid.Row="1" Grid.Column="1" x:Name="NotesFolder" VerticalAlignment="Center" FontSize="12"
                                Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="12,4,0,4">
+                        <Button Content="열기" Padding="12,3" Click="OnOpenNotesFolder" />
+                        <Button Content="위치 변경…" Padding="10,3" Margin="6,0,0,0" Click="OnChangeNotesFolder" />
+                        <Button Content="기본 위치로" Padding="10,3" Margin="6,0,0,0" Click="OnResetNotesFolder" x:Name="ResetNotesFolder" />
+                    </StackPanel>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" x:Name="PortableHint" Style="{StaticResource Hint}" Margin="0,6,0,0" />
                 </Grid>

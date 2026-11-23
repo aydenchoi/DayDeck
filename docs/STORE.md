@@ -26,7 +26,7 @@ Windows에서 직접 만들려면 (Windows SDK 필요): `./scripts/build-msix.ps
 |---|---|---|
 | 업데이트 | 앱이 GitHub 릴리스를 확인해 묻고 exe를 바꿈 | **Store가 업데이트.** 앱의 업데이트 확인·설치 기능과 트레이 "업데이트 확인"을 숨김 (Store 정책) |
 | 로그인 자동 실행 | 레지스트리 `HKCU\...\Run` | 매니페스트의 `StartupTask` (작업 관리자 → 시작 앱에도 보임) |
-| 데이터 폴더 | exe 옆 `Data` (안 되면 `%APPDATA%\DayDeck`) | `%LOCALAPPDATA%\Packages\<패키지 패밀리 이름>\LocalState`. 앱을 제거하면 함께 지워짐 |
+| 데이터 폴더 | exe 옆 `Data` (안 되면 `%APPDATA%\DayDeck`) | 기본은 `%LOCALAPPDATA%\Packages\<패키지 패밀리 이름>\LocalState`. 앱을 제거하면 함께 지워짐. 설정 → 데이터 → **위치 변경…**으로 다른 폴더에 두면 제거해도 남음 (AppData 아래는 고를 수 없음) |
 | 명령줄 | `DayDeck.exe --quick-add` | 같음 (실행 별칭 `DayDeck.exe` 등록) |
 
 Store 판은 `-p:StoreBuild=true`로 빌드합니다. StartupTask 같은 Windows API를 쓰려고 대상 프레임워크가

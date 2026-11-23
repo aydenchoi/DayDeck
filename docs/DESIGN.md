@@ -252,6 +252,12 @@ CREATE VIRTUAL TABLE items_fts USING fts5(title, notes, content='items', content
 
 테스트: `DataFolderCopyTests`가 데이터 폴더를 다른 경로로 복사한 뒤 설정·DB·메모가 그대로 열리는지 확인한다.
 
+데이터 폴더 위치 바꾸기 (설정 → 데이터 → 위치 변경…, `DataLocation`): 기본 위치(exe 옆 `Data\`, `%APPDATA%\DayDeck\`,
+Store 판은 LocalState)에 `data-location.txt`를 두고 새 위치를 한 줄로 적는다. 앱을 끝내고 DB 연결을 닫은 뒤
+복사 → 크기 확인 → 위치 기록 → 원래 파일 삭제 순서로 옮기고 다시 시작한다. 고른 폴더에 이미 DayDeck 데이터가 있으면
+옮기지 않고 그 데이터를 쓴다 (Store 판을 다시 설치한 경우). 기록된 폴더가 없으면 시작할 때 다시 시도·기본 위치·종료를 묻는다.
+Store 판은 AppData 아래가 가상화되므로 그 아래 폴더는 고를 수 없다. 테스트: `DataLocationTests`.
+
 ---
 
 ## 5. 기능 명세

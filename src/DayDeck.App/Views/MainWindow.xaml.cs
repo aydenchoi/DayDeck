@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using DayDeck.App.Services;
 using DayDeck.App.ViewModels;
 using DayDeck.App.Views.Calendar;
 using DayDeck.Core.Calendar;
@@ -648,8 +649,17 @@ public partial class MainWindow : Window
 
     private void UpdateMemoryStatus()
     {
+        // 작업 관리자와 같은 값(개인 작업 집합)을 보여 준다. Working Set은 공유 DLL·런타임까지 세어 훨씬 크게 나온다.
+        // 개인 작업 집합을 얻을 수 없는 Windows(10 1809 이전)에서만 Working Set을 보여 준다.
+        var heap = $"관리 힙 {GC.GetTotalMemory(forceFullCollection: false) / 1024d / 1024d:0.0}MB";
+        var privateWorkingSet = NativeMethods.GetPrivateWorkingSet();
+        if (privateWorkingSet is { } bytes)
+        {
+            MemoryStatus.Text = $"메모리 {bytes / 1024d / 1024d:0.0}MB · {heap}";
+            return;
+        }
+
         _process.Refresh();
-        MemoryStatus.Text = $"메모리 {_process.WorkingSet64 / 1024d / 1024d:0.0}MB (Working Set) · " +
-                            $"관리 힙 {GC.GetTotalMemory(forceFullCollection: false) / 1024d / 1024d:0.0}MB";
+        MemoryStatus.Text = $"메모리 {_process.WorkingSet64 / 1024d / 1024d:0.0}MB (Working Set) · {heap}";
     }
 }

@@ -47,11 +47,45 @@ Store 판은 `-p:StoreBuild=true`로 빌드합니다. StartupTask 같은 Windows
 
    지금 넣어 둔 값: `490D7318.DayDeck`, `CN=1602D1F2-D310-446D-9496-08FDC1449E0D`, `에이든초이`.
 4. **버전**: `Directory.Build.props`의 `<Version>`(예: 0.8.3)이 패키지 버전 `0.8.3.0`이 된다. 제출할 때마다 이전보다 커야 한다.
-5. **제출**: 새 제출 → 패키지에 `.msixupload`를 올리고, 가격·연령 등급 설문·스토어 등록 정보(설명, 스크린샷)를 채운다.
+5. **제출**: 새 제출 → 패키지에 `.msixupload`를 올리고 (main에 새 버전이 머지되면 GitHub 릴리스에 `DayDeck-<버전>-x64.msixupload`가 함께 올라간다), 가격·연령 등급 설문·스토어 등록 정보(설명, 스크린샷)를 채운다.
    - 개인정보처리방침 URL이 필요하다 (GitHub Pages 등).
    - `runFullTrust` 제한 기능을 쓰므로 "이 기능을 쓰는 이유"를 적는다: *데스크톱(WPF) 앱으로, 트레이 상주·전역 단축키·로컬 파일 저장을 위해 전체 신뢰가 필요합니다.*
    - 스크린샷은 CI의 `ui-screenshots` 결과물을 쓸 수 있다.
 6. 인증(보통 수 시간~며칠)을 통과하면 Store에 게시된다.
+
+## 자동 제출 (GitHub Actions)
+
+> 개인 개발자 계정(개인 Microsoft 계정)은 Entra 테넌트를 연결하기 어려워 지금은 쓰지 않는다 (새 테넌트는 유료 구독·결제 계정을 요구).
+> 그동안은 릴리스의 `.msixupload`를 Partner Center에 직접 올린다. `STORE_PUBLISH` 변수가 없으면 이 작업은 돌지 않는다.
+
+main에 머지되어 **새 버전 릴리스가 만들어지면** CI의 `store` 작업이 `.msixupload`를 Partner Center에 올리고 인증에 보낸다
+([Microsoft Store Developer CLI](https://github.com/microsoft/msstore-cli)의 `msstore publish`).
+설명·스크린샷·가격 등 등록 정보는 이전 제출 내용을 그대로 쓰고 패키지만 바뀐다.
+
+처음 한 번 설정:
+
+1. **첫 제출은 Partner Center에서 직접 끝낸다.** 자동 제출은 이미 게시된(또는 인증을 통과한) 앱의 업데이트만 한다.
+2. **Microsoft Entra 앱 연결**: Partner Center → 계정 설정(⚙) → 사용자 관리 → **Microsoft Entra 애플리케이션** →
+   새 Entra 앱 만들기(또는 기존 앱 추가), 역할은 **관리자(Manager)**. 만든 앱에서 **새 키 추가**로 클라이언트 비밀을 만든다.
+3. **GitHub 저장소 → Settings → Secrets and variables → Actions**에 넣는다.
+
+   | 종류 | 이름 | 값 (Partner Center 위치) |
+   |---|---|---|
+   | Secret | `STORE_TENANT_ID` | 테넌트 ID (사용자 관리 → Entra 애플리케이션) |
+   | Secret | `STORE_CLIENT_ID` | 클라이언트 ID (같은 화면) |
+   | Secret | `STORE_CLIENT_SECRET` | 2에서 만든 키 |
+   | Secret | `STORE_SELLER_ID` | 판매자 ID (계정 설정 → 법률 정보 → 개발자) |
+   | Variable | `STORE_PRODUCT_ID` | 앱의 Store ID (제품 ID 페이지, `9N…`로 시작) |
+   | Variable | `STORE_PUBLISH` | `true` (이 값이 있어야 작업이 돈다. 끄려면 지우거나 `false`) |
+
+4. **시험 제출**: Actions → build → Run workflow (main) → `store`를 **draft**로 실행한다.
+   Partner Center에 새 제출 초안이 생기고 패키지가 바뀌어 있으면 성공이다. 초안은 거기서 제출하거나 지운다.
+   `submit`을 고르면 바로 인증에 보낸다 (이미 있는 버전을 다시 내야 할 때).
+
+주의:
+- 버전(`Directory.Build.props`)을 올리지 않은 머지는 릴리스를 만들지 않으므로 Store 제출도 하지 않는다.
+- 이전 제출이 아직 인증 중이거나 Partner Center에 손으로 만든 초안이 있으면 실패할 수 있다. 그때는 그 제출을 정리한 뒤 Run workflow → `submit`.
+- 제출이 실패해도 GitHub 릴리스(zip·setup.exe)는 이미 나간 상태다.
 
 ## 내 PC에서 Store 판 시험하기
 

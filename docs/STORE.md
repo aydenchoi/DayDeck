@@ -47,13 +47,16 @@ Store 판은 `-p:StoreBuild=true`로 빌드합니다. StartupTask 같은 Windows
 
    지금 넣어 둔 값: `490D7318.DayDeck`, `CN=1602D1F2-D310-446D-9496-08FDC1449E0D`, `에이든초이`.
 4. **버전**: `Directory.Build.props`의 `<Version>`(예: 0.8.3)이 패키지 버전 `0.8.3.0`이 된다. 제출할 때마다 이전보다 커야 한다.
-5. **제출**: 새 제출 → 패키지에 `.msixupload`를 올리고, 가격·연령 등급 설문·스토어 등록 정보(설명, 스크린샷)를 채운다.
+5. **제출**: 새 제출 → 패키지에 `.msixupload`를 올리고 (main에 새 버전이 머지되면 GitHub 릴리스에 `DayDeck-<버전>-x64.msixupload`가 함께 올라간다), 가격·연령 등급 설문·스토어 등록 정보(설명, 스크린샷)를 채운다.
    - 개인정보처리방침 URL이 필요하다 (GitHub Pages 등).
    - `runFullTrust` 제한 기능을 쓰므로 "이 기능을 쓰는 이유"를 적는다: *데스크톱(WPF) 앱으로, 트레이 상주·전역 단축키·로컬 파일 저장을 위해 전체 신뢰가 필요합니다.*
    - 스크린샷은 CI의 `ui-screenshots` 결과물을 쓸 수 있다.
 6. 인증(보통 수 시간~며칠)을 통과하면 Store에 게시된다.
 
 ## 자동 제출 (GitHub Actions)
+
+> 개인 개발자 계정(개인 Microsoft 계정)은 Entra 테넌트를 연결하기 어려워 지금은 쓰지 않는다 (새 테넌트는 유료 구독·결제 계정을 요구).
+> 그동안은 릴리스의 `.msixupload`를 Partner Center에 직접 올린다. `STORE_PUBLISH` 변수가 없으면 이 작업은 돌지 않는다.
 
 main에 머지되어 **새 버전 릴리스가 만들어지면** CI의 `store` 작업이 `.msixupload`를 Partner Center에 올리고 인증에 보낸다
 ([Microsoft Store Developer CLI](https://github.com/microsoft/msstore-cli)의 `msstore publish`).

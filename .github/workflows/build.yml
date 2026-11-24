@@ -151,12 +151,20 @@ jobs:
           name: DayDeck-setup
           path: dl/setup
 
+      - uses: actions/download-artifact@v5
+        if: steps.version.outputs.exists == 'false'
+        with:
+          name: DayDeck-msix
+          path: dl/msix
+
       - name: Create release
         if: steps.version.outputs.exists == 'false'
         run: |
           v=${{ steps.version.outputs.version }}
           mkdir release
           cp dl/setup/*-setup.exe release/
+          # Partner Center에 올리는 Store 패키지 (서명하지 않음, Store가 서명). 테스트용 .msix/.cer는 넣지 않는다.
+          cp dl/msix/*.msixupload release/
           (cd dl/self-contained && zip -9 -j "../../release/DayDeck-$v-x64.zip" *)
           (cd dl/framework-dependent && zip -9 -j "../../release/DayDeck-$v-x64-framework-dependent.zip" *)
           (cd release && sha256sum *.zip > SHA256SUMS.txt && cat SHA256SUMS.txt)

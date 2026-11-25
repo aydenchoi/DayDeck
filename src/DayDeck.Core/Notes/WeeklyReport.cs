@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using DayDeck.Core.Settings;
 
 namespace DayDeck.Core.Notes;
 
@@ -40,14 +41,17 @@ public sealed record ReportWeek(DateOnly Monday)
 }
 
 /// <summary>
-/// 주간업무보고 글 (메모 폴더의 <c>주간업무보고\연도\2026-10 5주차.txt</c>). 제목과 금주실적·차주계획의 날짜는
-/// 저장할 때마다 주차에서 다시 만들어 쓰므로 틀릴 수 없고, 사람은 두 내용만 쓴다.
+/// 주간업무보고 글 (메모 폴더의 <c>주간업무보고\연도\2026-10 5주차.txt</c>). 양식(<see cref="WeeklyReportSettings"/>)의
+/// 제목과 항목 머리글의 날짜는 저장할 때마다 주차에서 다시 만들어 쓰므로 틀릴 수 없고, 사람은 항목 내용만 쓴다.
 /// <code>
 /// 주간업무 보고 10월 5주차
 /// 금주실적(10/26 ~ 10/30)
 ///  - …
 ///
 /// 차주계획(11/2 ~ 11/6)
+///  - …
+///
+/// 이슈사항
 ///  - …
 /// </code>
 /// </summary>
@@ -58,18 +62,48 @@ public static partial class WeeklyReport
     /// <summary>새 보고의 빈 항목.</summary>
     public const string EmptyItem = " - ";
 
-    private const string DoneHeading = "금주실적";
-    private const string PlanHeading = "차주계획";
+    /// <summary>제목: 양식의 <c>{년} {월} {주차} {금주} {차주}</c>를 채운다.</summary>
+    public static string Title(ReportWeek week, WeeklyReportSettings template) =>
+        template.Title
+            .Replace("{년}", week.Year.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
+            .Replace("{월}", week.Month.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
+            .Replace("{주차}", week.WeekOfMonth.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
+            .Replace("{금주}", week.Range, StringComparison.Ordinal)
+            .Replace("{차주}", week.Next.Range, StringComparison.Ordinal);
 
-    public static string Title(ReportWeek week) => $"주간업무 보고 {week.Month}월 {week.WeekOfMonth}주차";
+    /// <summary>항목 머리글: "금주실적(10/26 ~ 10/30)", "이슈사항".</summary>
+    public static string Header(ReportWeek week, ReportSection section) => section.Dates switch
+    {
+        ReportDateRange.ThisWeek => $"{section.Name}({week.Range})",
+        ReportDateRange.NextWeek => $"{section.Name}({week.Next.Range})",
+        _ => section.Name,
+    };
 
-    public static string DoneHeader(ReportWeek week) => $"{DoneHeading}({week.Range})";
-
-    public static string PlanHeader(ReportWeek week) => $"{PlanHeading}({week.Next.Range})";
-
-    /// <summary>보고 글 전체. 내용이 비었으면 빈 항목(" - ")을 둔다.</summary>
-    public static string Write(ReportWeek week, string done, string plan) =>
-        string.Join("\n", Title(week), DoneHeader(week), Body(done), "", PlanHeader(week), Body(plan));
+    /// <summary>
+    /// 보고 글 전체. 켜 둔 항목은 내용이 비었으면 빈 항목(" - ")으로 쓰고,
+    /// 꺼 둔 항목은 내용이 있을 때만 쓴다 (예전에 쓴 내용을 지우지 않도록).
+    /// </summary>
+    public static string Write(ReportWeek week, WeeklyReportSettings template, IReadOnlyDictionary<string, string> bodies)
+    {
+        var lines = new List<string> { Title(week, template) };
+        var first = true;
+        foreach (var section in template.Sections)
+        {
+            var body = bodies.GetValueOrDefault(section.Name) ?? "";
+            if (!section.Enabled && IsBlank(body))
+            {
+                continue;
+            }
+            if (!first)
+            {
+                lines.Add("");
+            }
+            lines.Add(Header(week, section));
+            lines.Add(Body(body));
+            first = false;
+        }
+        return string.Join("\n", lines);
+    }
 
     private static string Body(string text)
     {
@@ -78,28 +112,75 @@ public static partial class WeeklyReport
     }
 
     /// <summary>
-    /// 저장된 글에서 금주실적·차주계획 내용만 꺼낸다 (제목·머리글 줄의 날짜는 버린다). 머리글이 없으면 글 전체를 금주실적으로 본다.
+    /// 저장된 글에서 항목별 내용만 꺼낸다 (키: 항목 이름). 제목 줄과 머리글의 날짜는 버린다.
+    /// 머리글은 항목 이름(또는 예전 이름)만 있거나 그 뒤에 "(날짜)"·":"만 붙은 줄이다 ("이슈사항: 서버 장애" 같은 내용 줄은 아님).
+    /// 아는 머리글이 하나도 없으면 글 전체를 첫 항목 내용으로 본다.
     /// </summary>
-    public static (string Done, string Plan) Parse(string text)
+    public static Dictionary<string, string> Parse(string text, WeeklyReportSettings template)
     {
         var lines = text.Replace("\r\n", "\n").Split('\n');
-        var done = Array.FindIndex(lines, l => l.TrimStart().StartsWith(DoneHeading, StringComparison.Ordinal));
-        var plan = Array.FindIndex(lines, l => l.TrimStart().StartsWith(PlanHeading, StringComparison.Ordinal));
+        var bodies = new Dictionary<string, string>(StringComparer.Ordinal);
+        string? current = null;
+        var start = 0;
+
         // 빈 줄만 앞뒤에서 뗀다 (빈 항목 " - "의 끝 공백은 남겨야 이어 쓸 때 "-글"이 되지 않는다).
-        string Join(int from, int to) => string.Join("\n", lines[from..to]).Trim('\n');
-        if (done < 0 && plan < 0)
+        void Flush(int end)
         {
-            return (text.Replace("\r\n", "\n").Trim('\n'), "");
+            if (current is null)
+            {
+                return;
+            }
+            var body = string.Join("\n", lines[start..end]).Trim('\n');
+            bodies[current] = bodies.TryGetValue(current, out var earlier) && earlier.Length > 0 ? earlier + "\n" + body : body;
         }
-        if (plan < 0)
+
+        for (var i = 0; i < lines.Length; i++)
         {
-            return (Join(done + 1, lines.Length), "");
+            if (HeadingOf(lines[i], template) is { } section)
+            {
+                Flush(i);
+                current = section.Name;
+                start = i + 1;
+            }
         }
-        if (done < 0 || done > plan)
+        Flush(lines.Length);
+
+        if (current is null && template.ActiveSections().FirstOrDefault() is { } firstSection)
         {
-            return (done < 0 ? "" : Join(done + 1, lines.Length), Join(plan + 1, done < 0 ? lines.Length : done));
+            bodies[firstSection.Name] = text.Replace("\r\n", "\n").Trim('\n');
         }
-        return (Join(done + 1, plan), Join(plan + 1, lines.Length));
+        return bodies;
+    }
+
+    private static ReportSection? HeadingOf(string line, WeeklyReportSettings template)
+    {
+        var trimmed = line.Trim();
+        foreach (var section in template.Sections)
+        {
+            foreach (var name in section.Aliases.Prepend(section.Name))
+            {
+                if (trimmed.StartsWith(name, StringComparison.Ordinal) && HeadingRest().IsMatch(trimmed[name.Length..]))
+                {
+                    return section;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// 새 주의 보고에 미리 넣을 내용: 지난주 보고의 첫 "차주" 항목을 이번 주의 첫 "금주" 항목으로.
+    /// 그런 항목이 없거나 지난주 내용이 비었으면 빈 사전.
+    /// </summary>
+    public static Dictionary<string, string> CarryOver(string previousReport, WeeklyReportSettings template)
+    {
+        var plan = template.ActiveSections().FirstOrDefault(s => s.Dates == ReportDateRange.NextWeek);
+        var done = template.ActiveSections().FirstOrDefault(s => s.Dates == ReportDateRange.ThisWeek);
+        if (plan is null || done is null || !Parse(previousReport, template).TryGetValue(plan.Name, out var carried) || IsBlank(carried))
+        {
+            return [];
+        }
+        return new(StringComparer.Ordinal) { [done.Name] = carried };
     }
 
     /// <summary>내용을 쓰지 않은 보고인지 (빈 항목만 있음).</summary>
@@ -133,6 +214,10 @@ public static partial class WeeklyReport
         var thursday = firstThursday.AddDays(7 * (number - 1));
         return thursday.Month == month ? ReportWeek.Of(thursday) : null;
     }
+
+    /// <summary>머리글에서 항목 이름 뒤에 올 수 있는 것: 없음, "(10/26 ~ 10/30)", ":".</summary>
+    [GeneratedRegex(@"^\s*(\([^)]*\))?\s*[:：]?$")]
+    private static partial Regex HeadingRest();
 
     [GeneratedRegex(@"^(?<year>\d{4})-(?<month>\d{2}) (?<week>\d)주차$")]
     private static partial Regex FileName();

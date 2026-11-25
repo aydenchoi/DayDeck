@@ -6,34 +6,39 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using DayDeck.Core.Diagnostics;
 using DayDeck.Core.Notes;
+using DayDeck.Core.Settings;
 
 namespace DayDeck.App.Views;
 
 /// <summary>
-/// 주간업무보고: 주차(목요일 기준)마다 금주실적·차주계획을 써서 메모 폴더의 <c>주간업무보고\연도\</c>에 .txt로 저장한다.
+/// 주간업무보고: 주차(목요일 기준)마다 양식의 항목(기본: 금주실적·차주계획·이슈사항·문의사항)을 칸마다 써서
+/// 메모 폴더의 <c>주간업무보고\연도\</c>에 .txt로 저장한다. 양식은 설정 → 주간업무보고에서 바꾼다.
 /// 제목과 날짜는 주차에서 만들어 보여 주기만 하고 저장할 때마다 다시 쓰므로 잘못 적을 수 없다.
-/// 새 주를 열면 지난주의 차주계획을 금주실적에 미리 넣는다. "복사"는 보고 전체를 그대로 클립보드에.
+/// 새 주를 열면 지난주의 차주 항목을 금주 항목에 미리 넣는다. "복사"는 보고 전체를 그대로 클립보드에.
 /// </summary>
 public partial class WeeklyReportPage : UserControl
 {
     private readonly App _app = App.Current;
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(800) };
+    private readonly List<SectionEditor> _sections = [];
+
+    /// <summary>이 화면을 여는 동안 쓰는 양식 (설정을 바꾸면 화면을 다시 열 때 반영된다).</summary>
+    private readonly WeeklyReportSettings _template;
+
+    /// <summary>꺼 둔 항목에 이미 쓴 내용. 화면에는 없지만 저장할 때 그대로 남긴다.</summary>
+    private Dictionary<string, string> _hidden = [];
+
     private ReportWeek _week = ReportWeek.Of(Today);
     private bool _loading;
     private bool _dirty;
 
+    private sealed record SectionEditor(ReportSection Section, TextBlock Header, TextBox Box);
+
     public WeeklyReportPage()
     {
         InitializeComponent();
-        var notes = _app.Settings.Current.Notes;
-        foreach (var box in new[] { DoneBox, PlanBox })
-        {
-            box.FontFamily = Services.FontService.EditorFont(notes);
-            box.FontSize = notes.EditorFontSize;
-            box.TextChanged += OnEdited;
-            box.PreviewKeyDown += OnBulletKey;
-            box.LostKeyboardFocus += (_, _) => Save();
-        }
+        _template = Snapshot(_app.Settings.Current.WeeklyReport);
+        BuildSections();
         _saveTimer.Tick += (_, _) => Save();
         Loaded += (_, _) =>
         {
@@ -49,6 +54,58 @@ public partial class WeeklyReportPage : UserControl
     }
 
     private static DateOnly Today => DateOnly.FromDateTime(DateTime.Now);
+
+    private static WeeklyReportSettings Snapshot(WeeklyReportSettings settings) => new()
+    {
+        Title = settings.Title,
+        Sections = [.. settings.Sections.Select(s => new ReportSection(s.Name, s.Dates) { Enabled = s.Enabled, Aliases = [.. s.Aliases] })],
+    };
+
+    /// <summary>양식의 켜 둔 항목마다 머리글과 입력 칸을 만든다. 칸은 남은 높이를 나눠 갖는다.</summary>
+    private void BuildSections()
+    {
+        var notes = _app.Settings.Current.Notes;
+        var first = true;
+        foreach (var section in _template.ActiveSections())
+        {
+            var header = new TextBlock { FontSize = 14, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, first ? 0 : 14, 0, 4) };
+            header.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            var box = new TextBox
+            {
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.Wrap,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalContentAlignment = VerticalAlignment.Top,
+                Padding = new Thickness(6, 4, 6, 4),
+                FontFamily = Services.FontService.EditorFont(notes),
+                FontSize = notes.EditorFontSize,
+            };
+            System.Windows.Automation.AutomationProperties.SetName(box, section.Name);
+            box.TextChanged += OnEdited;
+            box.PreviewKeyDown += OnBulletKey;
+            box.LostKeyboardFocus += (_, _) => Save();
+
+            SectionsGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            SectionsGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star), MinHeight = 64 });
+            Grid.SetRow(header, SectionsGrid.RowDefinitions.Count - 2);
+            Grid.SetRow(box, SectionsGrid.RowDefinitions.Count - 1);
+            SectionsGrid.Children.Add(header);
+            SectionsGrid.Children.Add(box);
+            _sections.Add(new SectionEditor(section, header, box));
+            first = false;
+        }
+    }
+
+    /// <summary>지금 화면의 항목별 내용 (꺼 둔 항목의 예전 내용 포함).</summary>
+    private Dictionary<string, string> CurrentBodies()
+    {
+        var bodies = new Dictionary<string, string>(_hidden, StringComparer.Ordinal);
+        foreach (var editor in _sections)
+        {
+            bodies[editor.Section.Name] = editor.Box.Text;
+        }
+        return bodies;
+    }
 
     // ---------- 주 고르기 ----------
 
@@ -74,7 +131,7 @@ public partial class WeeklyReportPage : UserControl
         }
     }
 
-    /// <summary>그 주의 보고를 연다. 아직 없으면 빈 보고 (지난주 차주계획을 금주실적으로).</summary>
+    /// <summary>그 주의 보고를 연다. 아직 없으면 빈 보고 (지난주 차주 항목을 금주 항목으로).</summary>
     private void Show(ReportWeek week)
     {
         Save();
@@ -84,30 +141,32 @@ public partial class WeeklyReportPage : UserControl
         {
             var path = WeeklyReport.PathOf(week);
             var saved = _app.Notes.Exists(path);
-            string done, plan, status;
+            Dictionary<string, string> bodies;
+            string status;
             if (saved)
             {
-                (done, plan) = WeeklyReport.Parse(_app.Notes.Read(path));
+                bodies = WeeklyReport.Parse(_app.Notes.Read(path), _template);
                 status = "저장된 보고입니다. 고치면 자동 저장됩니다.";
             }
             else
             {
                 var previous = WeeklyReport.PathOf(week.Previous);
-                var carried = _app.Notes.Exists(previous) ? WeeklyReport.Parse(_app.Notes.Read(previous)).Plan : "";
-                var hasCarried = !WeeklyReport.IsBlank(carried);
-                done = hasCarried ? carried : WeeklyReport.EmptyItem;
-                plan = WeeklyReport.EmptyItem;
-                status = hasCarried
-                    ? "새 보고 — 지난주 차주계획을 금주실적에 넣었습니다. 고쳐서 쓰면 저장됩니다."
+                bodies = _app.Notes.Exists(previous) ? WeeklyReport.CarryOver(_app.Notes.Read(previous), _template) : [];
+                status = bodies.Count > 0
+                    ? "새 보고 — 지난주 차주 항목을 이번 주 항목에 넣었습니다. 고쳐서 쓰면 저장됩니다."
                     : "새 보고 — 내용을 쓰면 저장됩니다.";
             }
-            WeekTitle.Text = WeeklyReport.Title(week);
+            _hidden = bodies.Where(kv => _sections.All(e => e.Section.Name != kv.Key))
+                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
+            WeekTitle.Text = WeeklyReport.Title(week, _template);
             WeekLabel.Text = $"{week.Label} · {week.Monday:yyyy-MM-dd}(월) ~ {week.Friday:yyyy-MM-dd}(금)";
-            DoneHeader.Text = WeeklyReport.DoneHeader(week);
-            PlanHeader.Text = WeeklyReport.PlanHeader(week);
             CurrentChip.Visibility = week == ReportWeek.Of(Today) ? Visibility.Visible : Visibility.Collapsed;
-            DoneBox.Text = done;
-            PlanBox.Text = plan;
+            foreach (var editor in _sections)
+            {
+                editor.Header.Text = WeeklyReport.Header(week, editor.Section);
+                var body = bodies.GetValueOrDefault(editor.Section.Name);
+                editor.Box.Text = body is null || WeeklyReport.IsBlank(body) ? WeeklyReport.EmptyItem : body;
+            }
             DeleteButton.IsEnabled = saved;
             StatusText.Text = status;
             JumpDate.SelectedDate = week.Monday.ToDateTime(TimeOnly.MinValue);
@@ -123,8 +182,11 @@ public partial class WeeklyReportPage : UserControl
             _loading = false;
         }
         RefreshList();
-        DoneBox.Focus();
-        DoneBox.CaretIndex = DoneBox.Text.Length;
+        if (_sections.FirstOrDefault()?.Box is { } firstBox)
+        {
+            firstBox.Focus();
+            firstBox.CaretIndex = firstBox.Text.Length;
+        }
     }
 
     // ---------- 저장 ----------
@@ -148,14 +210,15 @@ public partial class WeeklyReportPage : UserControl
             return;
         }
         var path = WeeklyReport.PathOf(_week);
-        var text = WeeklyReport.Write(_week, DoneBox.Text, PlanBox.Text);
+        var bodies = CurrentBodies();
+        var text = WeeklyReport.Write(_week, _template, bodies);
         try
         {
             if (_app.Notes.Exists(path))
             {
                 _app.Notes.Save(path, text);
             }
-            else if (WeeklyReport.IsBlank(DoneBox.Text) && WeeklyReport.IsBlank(PlanBox.Text))
+            else if (bodies.Values.All(WeeklyReport.IsBlank))
             {
                 _dirty = false; // 아무것도 쓰지 않은 주는 파일을 만들지 않는다.
                 return;
@@ -238,7 +301,7 @@ public partial class WeeklyReportPage : UserControl
         Save();
         try
         {
-            Clipboard.SetText(WeeklyReport.Write(_week, DoneBox.Text, PlanBox.Text).Replace("\n", "\r\n"));
+            Clipboard.SetText(WeeklyReport.Write(_week, _template, CurrentBodies()).Replace("\n", "\r\n"));
             StatusText.Text = "📋 복사했습니다 — 메일이나 메신저에 붙여 넣으세요.";
         }
         catch (System.Runtime.InteropServices.ExternalException ex)

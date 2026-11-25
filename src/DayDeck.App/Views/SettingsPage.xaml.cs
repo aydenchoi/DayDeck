@@ -135,6 +135,10 @@ public partial class SettingsPage : UserControl
 
         UpdateBackupStatus();
 
+        ReportTitle.Text = settings.WeeklyReport.Title;
+        ReportTitleHint.Text = "{년} {월} {주차} {금주} {차주}는 주차에서 채웁니다. 예: " + WeeklyReportSettings.DefaultTitle;
+        BuildReportSections();
+
         var version = typeof(App).Assembly.GetName().Version;
         AboutText.Text = $"DayDeck {version?.ToString(3)} · .NET {Environment.Version} · DB 스키마 v{_app.Database.GetSchemaVersion()}";
 
@@ -611,4 +615,198 @@ public partial class SettingsPage : UserControl
 
     private void Warn(string message) =>
         MessageBox.Show(Window.GetWindow(this), message, "DayDeck", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+    // ---------- 주간업무보고 양식 ----------
+
+    private static readonly (string Label, ReportDateRange Value)[] ReportDateChoices =
+        [("날짜 없음", ReportDateRange.None), ("이번 주 날짜", ReportDateRange.ThisWeek), ("다음 주 날짜", ReportDateRange.NextWeek)];
+
+    private WeeklyReportSettings ReportTemplate => _app.Settings.Current.WeeklyReport;
+
+    /// <summary>항목마다 한 줄: [사용] 이름 [날짜] ▲ ▼ ✕.</summary>
+    private void BuildReportSections()
+    {
+        ReportSectionsPanel.Children.Clear();
+        var sections = ReportTemplate.Sections;
+        for (var i = 0; i < sections.Count; i++)
+        {
+            var section = sections[i];
+            var index = i;
+            var row = new DockPanel { Margin = new Thickness(0, 2, 0, 2) };
+
+            var enabled = new CheckBox { IsChecked = section.Enabled, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+            enabled.ToolTip = "보고 화면에 이 항목을 둡니다";
+            System.Windows.Automation.AutomationProperties.SetName(enabled, $"{section.Name} 사용");
+            enabled.Click += (_, _) =>
+            {
+                if (enabled.IsChecked != true && sections.Count(s => s.Enabled) == 1)
+                {
+                    enabled.IsChecked = true; // 항목이 하나는 있어야 한다.
+                    return;
+                }
+                section.Enabled = enabled.IsChecked == true;
+                SaveReportTemplate();
+            };
+            DockPanel.SetDock(enabled, Dock.Left);
+            row.Children.Add(enabled);
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(8, 0, 0, 0) };
+            buttons.Children.Add(SmallButton("▲", "위로", index > 0, () => MoveReportSection(index, -1)));
+            buttons.Children.Add(SmallButton("▼", "아래로", index < sections.Count - 1, () => MoveReportSection(index, 1)));
+            buttons.Children.Add(SmallButton("✕", "항목 지우기", sections.Count > 1, () => RemoveReportSection(index)));
+            DockPanel.SetDock(buttons, Dock.Right);
+            row.Children.Add(buttons);
+
+            var dates = new ComboBox { Width = 130, Margin = new Thickness(8, 0, 0, 0) };
+            Fill(dates, ReportDateChoices.Select(c => (c.Label, (object?)c.Value)), section.Dates);
+            System.Windows.Automation.AutomationProperties.SetName(dates, $"{section.Name} 날짜");
+            dates.SelectionChanged += (_, _) =>
+            {
+                if (Selected(dates) is ReportDateRange range && range != section.Dates)
+                {
+                    section.Dates = range;
+                    SaveReportTemplate();
+                }
+            };
+            DockPanel.SetDock(dates, Dock.Right);
+            row.Children.Add(dates);
+
+            var name = new TextBox { Text = section.Name, Padding = new Thickness(4, 2, 4, 2), VerticalContentAlignment = VerticalAlignment.Center };
+            System.Windows.Automation.AutomationProperties.SetName(name, "항목 이름");
+            name.LostKeyboardFocus += (_, _) => RenameReportSection(section, name);
+            name.KeyDown += (_, e) =>
+            {
+                if (e.Key == System.Windows.Input.Key.Enter)
+                {
+                    RenameReportSection(section, name);
+                }
+            };
+            row.Children.Add(name);
+
+            ReportSectionsPanel.Children.Add(row);
+        }
+        RefreshReportPreview();
+    }
+
+    private static Button SmallButton(string text, string name, bool enabled, Action click)
+    {
+        var button = new Button { Content = text, Width = 28, Margin = new Thickness(4, 0, 0, 0), IsEnabled = enabled, ToolTip = name };
+        System.Windows.Automation.AutomationProperties.SetName(button, name);
+        button.Click += (_, _) => click();
+        return button;
+    }
+
+    /// <summary>이름을 바꾸면 예전 이름을 기억해 두어, 예전 이름으로 저장한 보고도 이 항목으로 읽는다.</summary>
+    private void RenameReportSection(ReportSection section, TextBox box)
+    {
+        var name = box.Text.Trim();
+        if (name == section.Name)
+        {
+            return;
+        }
+        if (name.Length == 0 || ReportTemplate.Sections.Any(s => s != section && s.Name == name))
+        {
+            box.Text = section.Name;
+            ReportPreview.Text = name.Length == 0 ? "⚠ 항목 이름을 비울 수 없습니다." : $"⚠ '{name}' 항목이 이미 있습니다.";
+            return;
+        }
+        if (!section.Aliases.Contains(section.Name))
+        {
+            section.Aliases.Add(section.Name);
+        }
+        section.Aliases.Remove(name);
+        section.Name = name;
+        box.Text = name;
+        SaveReportTemplate();
+    }
+
+    private void MoveReportSection(int index, int offset)
+    {
+        var sections = ReportTemplate.Sections;
+        (sections[index], sections[index + offset]) = (sections[index + offset], sections[index]);
+        SaveReportTemplate();
+        BuildReportSections();
+    }
+
+    private void RemoveReportSection(int index)
+    {
+        var section = ReportTemplate.Sections[index];
+        var answer = MessageBox.Show(Window.GetWindow(this),
+            $"'{section.Name}' 항목을 양식에서 지울까요?\n\n이미 쓴 보고에 이 항목 내용이 있으면, 그 보고를 열 때 앞 항목에 합쳐 보입니다.\n"
+            + "보고 화면에서 빼기만 하려면 지우지 말고 체크를 해제하세요.",
+            "주간업무보고 양식", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
+        if (answer != MessageBoxResult.OK)
+        {
+            return;
+        }
+        ReportTemplate.Sections.RemoveAt(index);
+        SaveReportTemplate();
+        BuildReportSections();
+    }
+
+    private void OnAddReportSection(object sender, RoutedEventArgs e)
+    {
+        var name = "새 항목";
+        for (var n = 2; ReportTemplate.Sections.Any(s => s.Name == name); n++)
+        {
+            name = $"새 항목 {n}";
+        }
+        ReportTemplate.Sections.Add(new ReportSection(name));
+        SaveReportTemplate();
+        BuildReportSections();
+        if (ReportSectionsPanel.Children[^1] is DockPanel row && row.Children.OfType<TextBox>().FirstOrDefault() is { } box)
+        {
+            box.Focus();
+            box.SelectAll();
+        }
+    }
+
+    private void OnResetReportTemplate(object sender, RoutedEventArgs e)
+    {
+        var answer = MessageBox.Show(Window.GetWindow(this),
+            "주간업무보고 양식을 기본(제목, 금주실적·차주계획·이슈사항·문의사항)으로 되돌릴까요? 이미 쓴 보고는 바뀌지 않습니다.",
+            "주간업무보고 양식", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
+        if (answer != MessageBoxResult.OK)
+        {
+            return;
+        }
+        // 예전 이름은 기본 항목의 예전 이름으로 남겨, 이름을 바꿔 썼던 보고도 계속 읽히게 한다.
+        var defaults = WeeklyReportSettings.DefaultSections();
+        foreach (var section in ReportTemplate.Sections)
+        {
+            var match = defaults.FirstOrDefault(d => d.Dates != ReportDateRange.None && d.Dates == section.Dates);
+            if (match is not null)
+            {
+                match.Aliases.AddRange(section.Aliases.Prepend(section.Name).Where(a => a != match.Name));
+            }
+        }
+        ReportTemplate.Title = WeeklyReportSettings.DefaultTitle;
+        ReportTemplate.Sections = defaults;
+        ReportTitle.Text = ReportTemplate.Title;
+        SaveReportTemplate();
+        BuildReportSections();
+    }
+
+    private void OnReportTitleEdited(object sender, RoutedEventArgs e)
+    {
+        if (_loading || ReportTitle.Text.Trim() == ReportTemplate.Title)
+        {
+            return;
+        }
+        ReportTemplate.Title = ReportTitle.Text;
+        SaveReportTemplate();
+        ReportTitle.Text = ReportTemplate.Title;
+    }
+
+    private void SaveReportTemplate()
+    {
+        _app.Settings.Save(); // Save가 Normalize로 빈 이름·겹치는 이름을 바로잡는다.
+        RefreshReportPreview();
+    }
+
+    private void RefreshReportPreview()
+    {
+        var week = Core.Notes.ReportWeek.Of(DateOnly.FromDateTime(DateTime.Now));
+        ReportPreview.Text = Core.Notes.WeeklyReport.Write(week, ReportTemplate, new Dictionary<string, string>());
+    }
 }

@@ -5,7 +5,7 @@
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="주간업무보고" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
             <TextBlock FontSize="13" Margin="0,2,0,12" Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"
-                       Text="제목과 날짜는 주차에서 자동으로 정해집니다 (주차는 목요일 기준). 금주실적과 차주계획 내용만 쓰면 자동 저장됩니다." />
+                       Text="제목과 날짜는 주차에서 자동으로 정해집니다 (주차는 목요일 기준). 항목마다 내용만 쓰면 자동 저장됩니다. 양식(제목·항목)은 설정 → 주간업무보고에서 바꿉니다." />
             <DockPanel Margin="0,0,0,12">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button x:Name="CopyButton" Content="📋 복사" Padding="14,4" Margin="8,0,0,0" Style="{StaticResource AccentButton}" Click="OnCopy"
@@ -48,10 +48,7 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" MinHeight="90" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" MinHeight="90" />
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Margin="0,0,0,12">
@@ -66,17 +63,10 @@
                         <TextBlock x:Name="WeekLabel" FontSize="12.5" Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0" />
                     </StackPanel>
 
-                    <TextBlock Grid.Row="1" x:Name="DoneHeader" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="{DynamicResource TextBrush}"
-                               AutomationProperties.AutomationId="WeeklyReportDoneHeader" />
-                    <TextBox Grid.Row="2" x:Name="DoneBox" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
-                             VerticalContentAlignment="Top" Padding="6,4" AutomationProperties.Name="금주실적" />
+                    <!-- 항목(금주실적·차주계획·이슈사항·문의사항 등)마다 머리글과 입력 칸. 설정의 양식대로 코드에서 만든다. -->
+                    <Grid Grid.Row="1" x:Name="SectionsGrid" />
 
-                    <TextBlock Grid.Row="3" x:Name="PlanHeader" FontSize="14" FontWeight="SemiBold" Margin="0,14,0,4" Foreground="{DynamicResource TextBrush}"
-                               AutomationProperties.AutomationId="WeeklyReportPlanHeader" />
-                    <TextBox Grid.Row="4" x:Name="PlanBox" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
-                             VerticalContentAlignment="Top" Padding="6,4" AutomationProperties.Name="차주계획" />
-
-                    <TextBlock Grid.Row="5" x:Name="StatusText" FontSize="12" Margin="0,8,0,0" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"
+                    <TextBlock Grid.Row="2" x:Name="StatusText" FontSize="12" Margin="0,8,0,0" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"
                                AutomationProperties.AutomationId="WeeklyReportStatus" />
                 </Grid>
             </Border>

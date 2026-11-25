@@ -198,6 +198,32 @@
                 </StackPanel>
             </Border>
 
+            <TextBlock Style="{StaticResource SectionHeader}">주간업무보고</TextBlock>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <DockPanel Margin="0,4">
+                        <TextBlock Text="제목" Width="60" FontSize="13" VerticalAlignment="Center" DockPanel.Dock="Left" />
+                        <TextBox x:Name="ReportTitle" Padding="4,2" LostKeyboardFocus="OnReportTitleEdited" AutomationProperties.Name="주간업무보고 제목" />
+                    </DockPanel>
+                    <TextBlock x:Name="ReportTitleHint" Style="{StaticResource Hint}" Margin="60,0,0,8" />
+
+                    <TextBlock Text="항목 (보고 화면에서 항목마다 칸이 따로 생깁니다)" FontSize="13" Margin="0,4,0,4" />
+                    <StackPanel x:Name="ReportSectionsPanel" />
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <Button Content="+ 항목 추가" Padding="10,3" Click="OnAddReportSection" />
+                        <Button Content="기본 양식으로" Padding="10,3" Margin="6,0,0,0" Click="OnResetReportTemplate" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Text="날짜를 고르면 머리글 옆에 그 주 월~금이 붙습니다. 새 주를 열면 지난주의 첫 '다음 주' 항목 내용을 첫 '이번 주' 항목에 미리 넣습니다. 항목을 끄면 보고 화면에서 빠지지만, 이미 쓴 보고의 내용은 지우지 않습니다. 이름을 바꿔도 예전 보고를 그대로 읽습니다." />
+
+                    <TextBlock Text="미리보기 (이번 주)" FontSize="13" Margin="0,10,0,4" />
+                    <Border BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="10,6">
+                        <TextBlock x:Name="ReportPreview" FontSize="12.5" TextWrapping="Wrap" Foreground="{DynamicResource SubTextBrush}"
+                                   AutomationProperties.AutomationId="WeeklyReportPreview" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
             <TextBlock Style="{StaticResource SectionHeader}">자동 저장</TextBlock>
             <Border Style="{StaticResource Card}">
                 <StackPanel>

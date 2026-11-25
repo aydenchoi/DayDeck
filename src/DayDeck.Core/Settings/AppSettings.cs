@@ -21,6 +21,7 @@ public sealed class AppSettings
     public WidgetSettings Widget { get; set; } = new();
     public BackupSettings Backup { get; set; } = new();
     public UpdateSettings Updates { get; set; } = new();
+    public WeeklyReportSettings WeeklyReport { get; set; } = new();
 
     /// <summary>
     /// 예전 버전 설정을 올린다. 바뀐 것이 있으면 true (파일에 다시 써야 함).
@@ -63,6 +64,8 @@ public sealed class AppSettings
         Widget ??= new();
         Backup ??= new();
         Updates ??= new();
+        WeeklyReport ??= new();
+        WeeklyReport.Normalize();
 
         AutoSave.IntervalMinutes = Math.Clamp(AutoSave.IntervalMinutes, AutoSaveSettings.MinIntervalMinutes, AutoSaveSettings.MaxIntervalMinutes);
         AutoSave.DebounceSeconds = Math.Clamp(AutoSave.DebounceSeconds, 1, 60);
@@ -242,3 +245,103 @@ public sealed class WidgetSettings
     public double Opacity { get; set; } = 0.92;
 }
 
+/// <summary>주간업무보고에서 항목 머리글 옆에 붙이는 날짜 범위.</summary>
+public enum ReportDateRange
+{
+    /// <summary>날짜 없음 (예: "이슈사항").</summary>
+    None,
+
+    /// <summary>이번 주 월~금 (예: "금주실적(10/26 ~ 10/30)").</summary>
+    ThisWeek,
+
+    /// <summary>다음 주 월~금 (예: "차주계획(11/2 ~ 11/6)").</summary>
+    NextWeek,
+}
+
+/// <summary>주간업무보고의 한 항목 (금주실적, 차주계획, 이슈사항 등). 보고 화면에서 항목마다 칸이 따로 있다.</summary>
+public sealed class ReportSection
+{
+    public ReportSection()
+    {
+    }
+
+    public ReportSection(string name, ReportDateRange dates = ReportDateRange.None)
+    {
+        Name = name;
+        Dates = dates;
+    }
+
+    public string Name { get; set; } = "";
+
+    public ReportDateRange Dates { get; set; }
+
+    /// <summary>끄면 보고 화면과 새 보고에서 빠진다. 이미 쓴 내용이 있는 보고에는 그대로 남는다.</summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>예전 이름. 이름을 바꾸기 전에 저장한 보고도 이 항목으로 읽는다.</summary>
+    public List<string> Aliases { get; set; } = [];
+}
+
+/// <summary>
+/// 주간업무보고 양식 (설정 → 주간업무보고). 제목의 <c>{년} {월} {주차} {금주} {차주}</c>는 주차에서 채운다.
+/// </summary>
+public sealed class WeeklyReportSettings
+{
+    public const string DefaultTitle = "주간업무 보고 {월}월 {주차}주차";
+
+    public string Title { get; set; } = DefaultTitle;
+
+    public List<ReportSection> Sections { get; set; } = DefaultSections();
+
+    public static List<ReportSection> DefaultSections() =>
+    [
+        new("금주실적", ReportDateRange.ThisWeek),
+        new("차주계획", ReportDateRange.NextWeek),
+        new("이슈사항"),
+        new("문의사항"),
+    ];
+
+    /// <summary>보고 화면에 보이는 항목 (켜 둔 것, 순서대로).</summary>
+    public IEnumerable<ReportSection> ActiveSections() => Sections.Where(s => s.Enabled);
+
+    /// <summary>빈 제목, 빈·겹치는 항목 이름을 바로잡는다. 항목이 없으면 기본 항목으로, 모두 꺼져 있으면 첫 항목을 켠다.</summary>
+    public void Normalize()
+    {
+        if (string.IsNullOrWhiteSpace(Title))
+        {
+            Title = DefaultTitle;
+        }
+        Title = Title.Trim();
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        var sections = new List<ReportSection>();
+        foreach (var section in Sections ?? [])
+        {
+            if (section is null || string.IsNullOrWhiteSpace(section.Name) || !names.Add(section.Name.Trim()))
+            {
+                continue;
+            }
+            section.Name = section.Name.Trim();
+            section.Aliases = [.. (section.Aliases ?? []).Select(a => a?.Trim() ?? "")
+                .Where(a => a.Length > 0 && a != section.Name).Distinct(StringComparer.Ordinal)];
+            if (!Enum.IsDefined(section.Dates))
+            {
+                section.Dates = ReportDateRange.None;
+            }
+            sections.Add(section);
+        }
+        // 예전 이름이 다른 항목의 지금 이름과 같으면 그 항목의 머리글을 잘못 가져가므로 뺀다.
+        foreach (var section in sections)
+        {
+            section.Aliases.RemoveAll(names.Contains);
+        }
+        if (sections.Count == 0)
+        {
+            sections = DefaultSections();
+        }
+        else if (!sections.Any(s => s.Enabled))
+        {
+            sections[0].Enabled = true;
+        }
+        Sections = sections;
+    }
+}

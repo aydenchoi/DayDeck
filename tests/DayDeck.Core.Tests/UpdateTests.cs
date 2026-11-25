@@ -177,6 +177,56 @@ public sealed class UpdateTests : IDisposable
         Assert.Empty(Directory.GetFiles(app, "*.old"));
     }
 
+    [Fact]
+    public void RetryWhileLocked_WaitsOutBriefLocks_ButNotOtherErrors()
+    {
+        const int SharingViolation = unchecked((int)0x80070020);
+        const int LockViolation = unchecked((int)0x80070021);
+        const int DiskFull = unchecked((int)0x80070070);
+        var waits = new List<TimeSpan>();
+        var previous = UpdateInstaller.Sleep;
+        UpdateInstaller.Sleep = waits.Add;
+        try
+        {
+            // 백신 검사처럼 잠깐 잡혀 있다 풀리면 성공한다.
+            var calls = 0;
+            UpdateInstaller.RetryWhileLocked(() =>
+            {
+                if (++calls < 3)
+                {
+                    throw new IOException("locked", SharingViolation);
+                }
+            });
+            Assert.Equal(3, calls);
+            Assert.Equal(UpdateInstaller.RetryDelays[..2], waits);
+
+            // 잠김이 아닌 오류는 기다리지 않고 바로 던진다.
+            calls = 0;
+            waits.Clear();
+            Assert.Throws<IOException>(() => UpdateInstaller.RetryWhileLocked(() =>
+            {
+                calls++;
+                throw new IOException("disk full", DiskFull);
+            }));
+            Assert.Equal(1, calls);
+            Assert.Empty(waits);
+
+            // 끝까지 잠겨 있으면 정해진 만큼 기다린 뒤 던진다.
+            calls = 0;
+            Assert.Throws<IOException>(() => UpdateInstaller.RetryWhileLocked(() =>
+            {
+                calls++;
+                throw new IOException("locked", LockViolation);
+            }));
+            Assert.Equal(UpdateInstaller.RetryDelays.Length + 1, calls);
+            Assert.InRange(UpdateInstaller.RetryDelays.Sum(d => d.TotalSeconds), 5, 15);
+        }
+        finally
+        {
+            UpdateInstaller.Sleep = previous;
+        }
+    }
+
     private UpdateClient Client(byte[] zip, string sums) => new(new HttpClient(new FakeHandler(request =>
         request.RequestUri!.AbsolutePath.EndsWith("SHA256SUMS.txt", StringComparison.Ordinal)
             ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(sums) }
